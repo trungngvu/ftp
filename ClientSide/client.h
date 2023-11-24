@@ -149,6 +149,11 @@ void ftclient_login(int sock_control)
 	char user[MAX_SIZE];
 	memset(user, 0, MAX_SIZE);
 
+	// Send LOGIN command to server
+	strcpy(cmd.code, "LGIN");
+	strcpy(cmd.arg, "");
+	ftclient_send_cmd(&cmd, sock_control);
+
 	// Get username from user
 	printf("Name: ");	
 	fflush(stdout); 		
@@ -180,6 +185,61 @@ void ftclient_login(int sock_control)
 			exit(0);
 		case 230:
 			printf("230 Successful login.\n");
+			break;
+		default:
+			perror("error reading message from server");
+			exit(1);		
+			break;
+	}
+}
+
+/**
+ * Register new user
+ */
+void ftclient_register(int sock_control)
+{
+	struct command cmd;
+	char user[MAX_SIZE];
+	memset(user, 0, MAX_SIZE);
+
+	// Send REG command to server
+	strcpy(cmd.code, "REG");
+	strcpy(cmd.arg, "");
+	ftclient_send_cmd(&cmd, sock_control);
+
+	// Get username from user
+	printf("Name: ");	
+	fflush(stdout); 		
+	read_input(user, MAX_SIZE);
+
+	// Send USER command to server
+	strcpy(cmd.code, "USER");
+	strcpy(cmd.arg, user);
+	ftclient_send_cmd(&cmd, sock_control);
+	
+	// Wait for go-ahead to send password
+	int wait;
+	recv(sock_control, &wait, sizeof(wait), 0);
+	printf("%d\n",wait);
+
+	// Get password from user
+	fflush(stdout);	
+	char *pass = getpass("Password: ");	
+
+	// Send PASS command to server
+	strcpy(cmd.code, "PASS");
+	strcpy(cmd.arg, pass);
+	ftclient_send_cmd(&cmd, sock_control);
+	
+	// wait for response
+	int retcode = read_reply(sock_control);
+	printf("%d",retcode);
+	switch (retcode) {
+		case 430:
+			printf("430 Error registering.\n");
+			exit(0);
+		case 230:
+			printf("230 Successfully registered.\n");
 			break;
 		default:
 			perror("error reading message from server");

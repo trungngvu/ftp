@@ -44,6 +44,11 @@ int main(int argc, char const *argv[])
 	printf("Connected to %s.\n", argv[1]);
 	print_reply(read_reply(sock_control)); 
 	
+	//Register
+	char hasAcc;
+	printf("Do you have an account? (Y/N) ");
+	scanf("%c",&hasAcc);
+	if ((hasAcc=='n')|| (hasAcc=='N')) ftclient_register(sock_control); 
 
 	/* Get name and password and send to server */
 	ftclient_login(sock_control);
