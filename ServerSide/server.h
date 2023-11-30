@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <ctype.h>
+#include <openssl/sha.h>
 
 #define INVALID_SOCKET -1
 #define INVALID_IP -1
@@ -22,6 +23,24 @@
 #define DEFAULT_PORT 3000
 typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;
+
+void sha256(const char *input, char *output)
+{
+	unsigned char hash[SHA256_DIGEST_LENGTH];
+
+	// Calculate SHA-256 hash
+	SHA256_CTX sha256;
+	SHA256_Init(&sha256);
+	SHA256_Update(&sha256, input, strlen(input));
+	SHA256_Final(hash, &sha256);
+
+	// Encode hash in hexadecimal
+	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+	{
+		sprintf(output + 2 * i, "%02x", hash[i]);
+	}
+	output[2 * SHA256_DIGEST_LENGTH] = '\0';
+}
 
 /**
  * Trim whiteshpace and line ending
@@ -166,7 +185,10 @@ int ftserve_check_user(char *user, char *pass)
 		// remove end of line and whitespace
 		trimstr(password, (int)strlen(password));
 
-		if ((strcmp(user, username) == 0) && (strcmp(pass, password) == 0))
+		char outputBuffer[65];
+		sha256(pass, outputBuffer);
+
+		if ((strcmp(user, username) == 0) && (strcmp(outputBuffer, password) == 0))
 		{
 			auth = 1;
 			break;
@@ -230,7 +252,7 @@ int ftserve_login(int sock_control)
 	memset(pass, 0, MAX_SIZE);
 	memset(buf, 0, MAX_SIZE);
 
-	// Wait to recieve username
+	// Wait to receive username
 	if ((recv_data(sock_control, buf, sizeof(buf))) == -1)
 	{
 		perror("recv error\n");
@@ -242,7 +264,7 @@ int ftserve_login(int sock_control)
 	// tell client we're ready for password
 	send_response(sock_control, 331);
 
-	// Wait to recieve password
+	// Wait to receive password
 	memset(buf, 0, MAX_SIZE);
 	if ((recv_data(sock_control, buf, sizeof(buf))) == -1)
 	{
@@ -267,7 +289,7 @@ int ftserve_register(int sock_control)
 	memset(pass, 0, MAX_SIZE);
 	memset(buf, 0, MAX_SIZE);
 
-	// Wait to recieve username
+	// Wait to receive username
 	if ((recv_data(sock_control, buf, sizeof(buf))) == -1)
 	{
 		perror("recv error\n");
@@ -275,13 +297,12 @@ int ftserve_register(int sock_control)
 	}
 
 	strcpy(user, buf + 5); // 'USER ' has 5 char
-	printf("%s",user);
 
-	while (!ftserve_check_username(user))
+	while (ftserve_check_username(user))
 	{
 		// tell client username already exist
 		send_response(sock_control, 431);
-		// Wait to recieve username
+		// Wait to receive username
 		if ((recv_data(sock_control, buf, sizeof(buf))) == -1)
 		{
 			perror("recv error\n");
@@ -293,7 +314,7 @@ int ftserve_register(int sock_control)
 	// tell client we're ready for password
 	send_response(sock_control, 331);
 
-	// Wait to recieve password
+	// Wait to receive password
 	memset(buf, 0, MAX_SIZE);
 	if ((recv_data(sock_control, buf, sizeof(buf))) == -1)
 	{
@@ -311,10 +332,10 @@ int ftserve_register(int sock_control)
 		perror("file not found");
 		exit(1);
 	}
-	fwrite(user, 1, sizeof(user), fptr);
-	fwrite(pass, 1, sizeof(pass), fptr);
-	char EOL[] = "\n";
-	fwrite(EOL, 1, sizeof(EOL), fptr);
+	fprintf(fptr, "%s ", user);
+	char outputBuffer[65];
+	sha256(pass, outputBuffer);
+	fprintf(fptr, "%s\n", outputBuffer);
 	fclose(fptr);
 	return 1;
 }
@@ -333,7 +354,7 @@ int ftserve_recv_cmd(int sock_control, char *cmd, char *arg)
 	memset(cmd, 0, 5);
 	memset(arg, 0, MAX_SIZE);
 
-	// Wait to recieve command
+	// Wait to receive command
 	if ((recv_data(sock_control, user_input, sizeof(user_input))) == -1)
 	{
 		perror("recv error\n");
@@ -589,17 +610,24 @@ void ftserve_process(int sock_control)
 	// Send welcome message
 	send_response(sock_control, 220);
 
-	// Recieve Login or Register
+	// receive Login or Register
 	ftserve_recv_cmd(sock_control, cmd, arg);
-	if (strcmp(cmd, "REG") == 0)
-		if (ftserve_register (sock_control))
+
+	// Register user
+	if (strcmp(cmd, "REG ") == 0)
+	{
+		if (ftserve_register(sock_control))
+		{
 			send_response(sock_control, 230);
+			// Receive login command
+			ftserve_recv_cmd(sock_control, cmd, arg);
+		}
 		else
 		{
 			send_response(sock_control, 430);
 			exit(0);
 		}
-
+	}
 	// Authenticate user
 	if (strcmp(cmd, "LGIN") == 0)
 	{
