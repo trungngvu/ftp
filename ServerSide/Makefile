@@ -5,7 +5,7 @@ LIBS =  -lm
 all: ser
 
 ser: server.c server.h
-	 ${CC} -o server server.c
+	 ${CC} -o server server.c -lssl -lcrypto
 
 clean:
 	rm -f *.o *~
