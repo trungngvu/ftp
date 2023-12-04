@@ -1,4 +1,4 @@
-#include "client.h"
+#include "lib/client.h"
 
 // Compile command: gcc client.c FTPClient.c -o ftpclient
 
@@ -119,6 +119,15 @@ int main(int argc, char const *argv[])
 					{
 						printf("%s is not a directory\n", cmd.arg);
 					}
+				}
+				else if (strcmp(cmd.code, "FIND") == 0)
+				{
+					int repl = read_reply(sock_control);
+					// File found
+					if (repl == 241)
+						ftclient_list(data_sock, sock_control); // ham nay in mess tu server
+					else if (repl == 441)
+						printf("441 File not found!\n");
 				}
 				else if (strcmp(cmd.code, "PWD ") == 0)
 				{

@@ -4,7 +4,7 @@ LIBS =  -lm
 
 all: cli
 
-cli: client.c client.h
+cli: client.c
 	 ${CC} -o client client.c
 
 clean:

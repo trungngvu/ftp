@@ -1,4 +1,4 @@
-#include "server.h"
+#include "lib/server.h"
 
 // compile command: gcc server.c FTP_Server.c -o ftpserver
 
