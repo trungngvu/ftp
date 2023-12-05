@@ -38,7 +38,7 @@
 #define INVALID_IP -1
 #define MAX_SIZE 1024
 #define PORT 9000
-#define DEFAULT_PORT 3000
+#define DEFAULT_PORT 3001
 typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;
 

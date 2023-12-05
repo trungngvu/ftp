@@ -1,7 +1,5 @@
 #include "lib/client.h"
 
-// Compile command: gcc client.c FTPClient.c -o ftpclient
-
 int main(int argc, char const *argv[])
 {
 	int sock_control;
@@ -128,6 +126,44 @@ int main(int argc, char const *argv[])
 						ftclient_list(data_sock, sock_control); // ham nay in mess tu server
 					else if (repl == 441)
 						printf("441 File not found!\n");
+				}
+				else if (strcmp(cmd.code, "RENM") == 0)
+				{
+					int repl = read_reply(sock_control);
+					if (repl == 251)
+						printf("251 Rename successfully\n");
+					else if (repl == 451)
+						printf("451 Rename failure\n");
+					else if (repl == 452)
+						printf("452 Syntax error (renm <oldfilename> <newfilename>)\n");
+				}
+				else if (strcmp(cmd.code, "DEL ") == 0)
+				{
+					int repl = read_reply(sock_control);
+					if (repl == 252)
+						printf("252 Delete successfully\n");
+					else if (repl == 453)
+						printf("451 Delete failure\n");
+				}
+				else if (strcmp(cmd.code, "MOV ") == 0)
+				{
+					int repl = read_reply(sock_control);
+					if (repl == 253)
+						printf("253 Moved successfully\n");
+					else if (repl == 454)
+						printf("454 Move failure\n");
+					else if (repl == 455)
+						printf("455 Syntax error (mov <filepath> <newfilepath>)\n");
+				}
+				else if (strcmp(cmd.code, "CPY ") == 0)
+				{
+					int repl = read_reply(sock_control);
+					if (repl == 253)
+						printf("253 Copied successfully\n");
+					else if (repl == 454)
+						printf("454 Copy failure\n");
+					else if (repl == 455)
+						printf("455 Syntax error (cpy <filepath> <newfilepath>)\n");
 				}
 				else if (strcmp(cmd.code, "PWD ") == 0)
 				{

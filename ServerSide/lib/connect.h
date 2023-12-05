@@ -178,7 +178,9 @@ int ftserve_recv_cmd(int sock_control, char *cmd, char *arg)
 			 (strcmp(cmd, "LIST") == 0) || (strcmp(cmd, "RETR") == 0) ||
 			 (strcmp(cmd, "CWD ") == 0) || (strcmp(cmd, "PWD ") == 0) ||
 			 (strcmp(cmd, "LGIN") == 0) || (strcmp(cmd, "REG ") == 0) ||
-			 (strcmp(cmd, "STOR") == 0) || (strcmp(cmd, "FIND") == 0))
+			 (strcmp(cmd, "STOR") == 0) || (strcmp(cmd, "FIND") == 0) ||
+			 (strcmp(cmd, "RENM") == 0) || (strcmp(cmd, "DEL ") == 0) ||
+			 (strcmp(cmd, "MOV ") == 0) || (strcmp(cmd, "CPY ") == 0))
 	{
 		rc = 200;
 	}

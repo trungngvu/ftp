@@ -7,6 +7,7 @@
 #include "pwd.h"
 #include "retr.h"
 #include "get.h"
+#include "file.h"
 
 /**
  * Child process handles connection to client
@@ -61,7 +62,6 @@ void ftserve_process(int sock_control)
 		{
 			break;
 		}
-
 		if (rc == 200)
 		{
 			// Open data connection with client
@@ -70,7 +70,6 @@ void ftserve_process(int sock_control)
 				close(sock_control);
 				exit(1);
 			}
-
 			// Execute command
 			if (strcmp(cmd, "LIST") == 0)
 			{ // Do list
@@ -81,8 +80,24 @@ void ftserve_process(int sock_control)
 				ftpServer_cwd(sock_control, arg);
 			}
 			else if (strcmp(cmd, "FIND") == 0)
-			{ // change directory
+			{ // find file
 				ftserve_find(sock_control, sock_data, arg);
+			}
+			else if (strcmp(cmd, "RENM") == 0)
+			{ // rename file and folder
+				ftserve_rename(sock_control, sock_data, arg);
+			}
+			else if (strcmp(cmd, "DEL ") == 0)
+			{ // rename file and folder
+				ftserve_delete(sock_control, sock_data, arg);
+			}
+			else if (strcmp(cmd, "MOV ") == 0)
+			{ // rename file and folder
+				ftserve_moveFile(sock_control, sock_data, arg);
+			}
+			else if (strcmp(cmd, "CPY ") == 0)
+			{ // rename file and folder
+				ftserve_copyFile(sock_control, sock_data, arg);
 			}
 			else if (strcmp(cmd, "PWD ") == 0)
 			{ // print working directory

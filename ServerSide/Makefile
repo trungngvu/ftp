@@ -4,7 +4,7 @@ LIBS =  -lssl -lcrypto
 
 all: ser
 
-ser: server.c
+ser: server.c lib/server.h
 	 ${CC} -o server server.c ${LIBS}
 
 clean:
