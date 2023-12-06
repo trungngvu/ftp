@@ -93,11 +93,15 @@ void ftserve_process(int sock_control)
 			}
 			else if (strcmp(cmd, "MOV ") == 0)
 			{ // rename file and folder
-				ftserve_moveFile(sock_control, sock_data, arg);
+				ftserve_move(sock_control, sock_data, arg);
 			}
 			else if (strcmp(cmd, "CPY ") == 0)
 			{ // rename file and folder
-				ftserve_copyFile(sock_control, sock_data, arg);
+				ftserve_copy(sock_control, sock_data, arg);
+			}
+			else if (strcmp(cmd, "MKDR") == 0)
+			{ // RETRIEVE: get file
+				ftserve_mkdir(sock_control, sock_data, arg);
 			}
 			else if (strcmp(cmd, "PWD ") == 0)
 			{ // print working directory

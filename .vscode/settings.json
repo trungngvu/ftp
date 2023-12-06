@@ -1,9 +1,12 @@
 {
   "C_Cpp.errorSquiggles": "disabled",
   "files.associations": {
+    "*.css": "tailwindcss",
     "auth.h": "c",
     "server.h": "c",
     "common.h": "c",
-    "list.h": "c"
+    "list.h": "c",
+    "*.tcc": "c",
+    "list": "c"
   }
 }
