@@ -7,6 +7,7 @@
     "common.h": "c",
     "list.h": "c",
     "*.tcc": "c",
-    "list": "c"
+    "list": "c",
+    "connect.h": "c"
   }
 }

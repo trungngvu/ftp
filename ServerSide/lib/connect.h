@@ -172,6 +172,8 @@ int ftserve_recv_cmd(int sock_control, char *cmd, char *arg)
 
 	if (strcmp(cmd, "QUIT") == 0)
 	{
+		chdir(root_dir);
+		toggleUserLock(cur_user, 0);
 		rc = 221;
 	}
 	else if ((strcmp(cmd, "USER") == 0) || (strcmp(cmd, "PASS") == 0) ||
@@ -181,7 +183,7 @@ int ftserve_recv_cmd(int sock_control, char *cmd, char *arg)
 			 (strcmp(cmd, "STOR") == 0) || (strcmp(cmd, "FIND") == 0) ||
 			 (strcmp(cmd, "RENM") == 0) || (strcmp(cmd, "DEL ") == 0) ||
 			 (strcmp(cmd, "MOV ") == 0) || (strcmp(cmd, "CPY ") == 0) ||
-			 (strcmp(cmd, "MKDR") == 0))
+			 (strcmp(cmd, "MKDR") == 0) || (strcmp(cmd, "SHRE") == 0))
 	{
 		rc = 200;
 	}

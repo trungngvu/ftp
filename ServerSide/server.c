@@ -1,9 +1,8 @@
 #include "lib/server.h"
 
-// compile command: gcc server.c FTP_Server.c -o ftpserver
-
 int main(int argc, char const *argv[])
 {
+	getcwd(root_dir, sizeof(root_dir));
 	int ListenSock, CtrlSock, pid;
 
 	if ((ListenSock = socket_create()) < 0 ) {

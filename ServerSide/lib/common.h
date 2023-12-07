@@ -44,6 +44,8 @@ typedef struct sockaddr SOCKADDR;
 
 // Currently logged in username
 char cur_user[MAX_SIZE];
+char root_dir[MAX_SIZE];
+char user_dir[MAX_SIZE] = "user/";
 
 /**
  * Trim whitespace and line ending
@@ -146,4 +148,78 @@ int isDirectory(const char *path)
 		return S_ISDIR(pathStat.st_mode);
 	}
 	return 0; // Return 0 for error or if the path is not a directory
+}
+
+// Function to lock or unlock a user in the .auth file (0 for unlock, 1 for lock)
+void toggleUserLock(const char *username, int lockStatus)
+{
+	// Open the .auth file in read mode
+	FILE *file = fopen(".auth", "r");
+
+	// Check if the file opened successfully
+	if (file == NULL)
+	{
+		printf("Error opening file!\n");
+		return;
+	}
+
+	// Temporary variables to store data read from the file
+	char currentUsername[100];
+	char password[100];
+	int isLocked;
+
+	// Create a temporary file to store updated information
+	FILE *tempFile = fopen("temp.auth", "w");
+
+	// Check if the temporary file opened successfully
+	if (tempFile == NULL)
+	{
+		printf("Error creating temporary file!\n");
+		fclose(file);
+		return;
+	}
+
+	// Read lines from the .auth file
+	while (fscanf(file, "%s %s %d", currentUsername, password, &isLocked) == 3)
+	{
+		// Check if the current line corresponds to the given username
+		if (strcmp(currentUsername, username) == 0)
+		{
+			// Update the lock status
+			fprintf(tempFile, "%s %s %d\n", currentUsername, password, lockStatus);
+		}
+		else
+		{
+			// Copy the line as is to the temporary file
+			fprintf(tempFile, "%s %s %d\n", currentUsername, password, isLocked);
+		}
+	}
+
+	// Close both files
+	fclose(file);
+	fclose(tempFile);
+
+	// Replace the original .auth file with the temporary file
+	remove(".auth");
+	rename("temp.auth", ".auth");
+
+	printf("User '%s' has been %s.\n", username, lockStatus == 1 ? "locked" : "unlocked");
+}
+
+// Function to create a directory
+int createDirectory(const char *path)
+{
+	int status = 0;
+	status = mkdir(path, 0755); // 0755 provides read, write, execute permissions for owner, and read, execute permissions for group and others
+
+	if (status == 0)
+	{
+		printf("Directory %s created successfully.\n", path);
+		return 0; // Success
+	}
+	else
+	{
+		perror("Error creating directory");
+		return -1; // Error
+	}
 }

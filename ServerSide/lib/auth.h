@@ -24,6 +24,8 @@ int ftserve_check_user(char *user, char *pass)
 {
     char username[MAX_SIZE];
     char password[MAX_SIZE];
+    char curDir[MAX_SIZE];
+    int isLock;
     char *pch;
     char buf[MAX_SIZE];
     char *line = NULL;
@@ -51,6 +53,9 @@ int ftserve_check_user(char *user, char *pass)
         {
             pch = strtok(NULL, " ");
             strcpy(password, pch);
+            pch = strtok(NULL, " ");
+            trimstr(pch, (int)strlen(pch));
+            isLock = atoi(pch);
         }
 
         // remove end of line and whitespace
@@ -59,9 +64,14 @@ int ftserve_check_user(char *user, char *pass)
         char outputBuffer[65];
         sha256(pass, outputBuffer);
 
-        if ((strcmp(user, username) == 0) && (strcmp(outputBuffer, password) == 0))
+        if ((strcmp(user, username) == 0) && (strcmp(outputBuffer, password) == 0 && (isLock == 0)))
         {
             auth = 1;
+            toggleUserLock(user, 1);
+            strcat(user_dir, username);
+            chdir(user_dir);
+            getcwd(curDir, sizeof(curDir));
+            strcpy(user_dir, curDir);
             strcpy(cur_user, user);
             break;
         }
@@ -157,6 +167,7 @@ int ftserve_register(int sock_control)
     char buf[MAX_SIZE];
     char user[MAX_SIZE];
     char pass[MAX_SIZE];
+    char userDir[MAX_SIZE] = "user/";
     memset(user, 0, MAX_SIZE);
     memset(pass, 0, MAX_SIZE);
     memset(buf, 0, MAX_SIZE);
@@ -207,7 +218,16 @@ int ftserve_register(int sock_control)
     fprintf(fptr, "%s ", user);
     char outputBuffer[65];
     sha256(pass, outputBuffer);
-    fprintf(fptr, "%s\n", outputBuffer);
+    fprintf(fptr, "%s 0\n", outputBuffer);
+
+    // Make new user folder
+    strcat(userDir, user);
+    createDirectory(userDir);
+    strcat(userDir, "/.shared");
+    FILE *shared;
+    shared = fopen(userDir, "w");
+    fclose(shared);
+
     fclose(fptr);
     return 1;
 }

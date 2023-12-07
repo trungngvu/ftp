@@ -109,14 +109,13 @@ int main(int argc, char const *argv[])
 				}
 				else if (strcmp(cmd.code, "CWD ") == 0)
 				{
-					if (read_reply(sock_control) == 250)
-					{
+					int repl = read_reply(sock_control);
+					if (repl == 250)
 						print_reply(250);
-					}
+					else if (repl = 551)
+						print_reply(551);
 					else
-					{
 						printf("%s is not a directory\n", cmd.arg);
-					}
 				}
 				else if (strcmp(cmd.code, "FIND") == 0)
 				{
@@ -164,6 +163,18 @@ int main(int argc, char const *argv[])
 						printf("454 Copy failure\n");
 					else if (repl == 455)
 						printf("455 Syntax error (cpy <filepath> <newfilepath>)\n");
+				}
+				else if (strcmp(cmd.code, "SHRE") == 0)
+				{
+					int repl = read_reply(sock_control);
+					if (repl == 261)
+						printf("261 Shared successfully\n");
+					else if (repl == 462)
+						printf("462 User not found\n");
+					else if (repl == 463)
+						printf("463 File not found\n");
+					else if (repl == 461)
+						printf("461 Syntax error (share <username> <filename>)\n");
 				}
 				else if (strcmp(cmd.code, "MKDR") == 0)
 				{

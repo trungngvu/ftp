@@ -23,6 +23,9 @@ void print_reply(int rc)
 	case 550:
 		printf("550 Requested action not taken. File unavailable.\n");
 		break;
+	case 551:
+		printf("551 Directory out of user scope.\n");
+		break;
 	}
 }
 
@@ -152,6 +155,14 @@ int ftclient_read_command(char *user_input, int size, struct command *cstruct)
 	{
 		strcpy(cstruct->code, "CPY ");
 		strcpy(cstruct->arg, user_input + 4);
+
+		memset(user_input, 0, MAX_SIZE);
+		sprintf(user_input, "%s %s", cstruct->code, cstruct->arg);
+	}
+	else if (strncmp(user_input, "share ", 6) == 0)
+	{
+		strcpy(cstruct->code, "SHRE");
+		strcpy(cstruct->arg, user_input + 6);
 
 		memset(user_input, 0, MAX_SIZE);
 		sprintf(user_input, "%s %s", cstruct->code, cstruct->arg);

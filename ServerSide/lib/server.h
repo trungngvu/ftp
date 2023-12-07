@@ -83,6 +83,10 @@ void ftserve_process(int sock_control)
 			{ // find file
 				ftserve_find(sock_control, sock_data, arg);
 			}
+			else if (strcmp(cmd, "SHRE") == 0)
+			{ // share file
+				ftserve_share(sock_control, sock_data, arg);
+			}
 			else if (strcmp(cmd, "RENM") == 0)
 			{ // rename file and folder
 				ftserve_rename(sock_control, sock_data, arg);

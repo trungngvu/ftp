@@ -165,24 +165,6 @@ int copyOrMoveFile(char *sourceFilename, char *destinationFilename, int mode)
     return 0; // Success
 }
 
-// Function to create a directory
-int createDirectory(const char *path)
-{
-    int status = 0;
-    status = mkdir(path, 0755); // 0755 provides read, write, execute permissions for owner, and read, execute permissions for group and others
-
-    if (status == 0)
-    {
-        printf("Directory %s created successfully.\n", path);
-        return 0; // Success
-    }
-    else
-    {
-        perror("Error creating directory");
-        return -1; // Error
-    }
-}
-
 // Function to recursively copy files and subdirectories
 int copyDirectory(char *sourcePath, char *destinationPath)
 {
@@ -373,4 +355,49 @@ void ftserve_copy(int sock_control, int sock_data, char *arg)
     }
     else
         send_response(sock_control, 455);
+}
+
+/**
+ * Share file with other users
+ */
+void ftserve_share(int sock_control, int sock_data, char *arg)
+{
+    char *user, *dir;
+    char shared_dir[MAX_SIZE] = "";
+    strcat(shared_dir, root_dir);
+    strcat(shared_dir, "/user/");
+    char file_dir[MAX_SIZE];
+    getcwd(file_dir, sizeof(file_dir));
+    if (splitString(arg, &user, &dir) == 0)
+    {
+        strcat(file_dir, "/");
+        strcat(file_dir, dir);
+        if (!isFile(file_dir))
+        {
+            printf("%s\n", file_dir);
+            send_response(sock_control, 463);
+            free(user);
+            free(dir);
+            return;
+        }
+        strcpy(file_dir, file_dir + strlen(root_dir));
+        FILE *shared;
+        strcat(shared_dir, user);
+        strcat(shared_dir, "/.shared");
+        shared = fopen(shared_dir, "a");
+        if (!shared)
+        {
+            send_response(sock_control, 462);
+            free(user);
+            free(dir);
+            return;
+        }
+        fprintf(shared, "%s\n", file_dir);
+        send_response(sock_control, 261);
+        fclose(shared);
+        free(user);
+        free(dir);
+    }
+    else
+        send_response(sock_control, 461);
 }

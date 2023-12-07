@@ -44,7 +44,7 @@ void ftclient_login(int sock_control)
 	switch (retcode)
 	{
 	case 430:
-		printf("430 Invalid username/password.\n");
+		printf("430 Invalid username/password or user in use.\n");
 		exit(0);
 	case 230:
 		printf("230 Successful login.\n");
