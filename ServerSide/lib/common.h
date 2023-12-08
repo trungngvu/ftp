@@ -43,9 +43,7 @@ typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;
 
 // Currently logged in username
-char cur_user[MAX_SIZE];
 char root_dir[MAX_SIZE];
-char user_dir[MAX_SIZE] = "user/";
 
 /**
  * Trim whitespace and line ending
@@ -222,4 +220,19 @@ int createDirectory(const char *path)
 		perror("Error creating directory");
 		return -1; // Error
 	}
+}
+
+// Function to extract the username from userpath
+char *extractUsername(char *path)
+{
+	char *lastSlash = strrchr(path, '/');
+
+	if (lastSlash != NULL)
+	{
+		// Return the substring after the last '/'
+		return lastSlash + 1;
+	}
+
+	// Return the original path if no '/'
+	return path;
 }

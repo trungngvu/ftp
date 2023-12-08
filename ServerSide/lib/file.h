@@ -360,7 +360,7 @@ void ftserve_copy(int sock_control, int sock_data, char *arg)
 /**
  * Share file with other users
  */
-void ftserve_share(int sock_control, int sock_data, char *arg)
+void ftserve_share(int sock_control, int sock_data, char *arg, char *cur_user)
 {
     char *user, *dir;
     char shared_dir[MAX_SIZE] = "";
@@ -370,11 +370,19 @@ void ftserve_share(int sock_control, int sock_data, char *arg)
     getcwd(file_dir, sizeof(file_dir));
     if (splitString(arg, &user, &dir) == 0)
     {
+        // 464 Must not share to yourself
+        if (strcmp(user, cur_user) == 0)
+        {
+            send_response(sock_control, 464);
+            free(user);
+            free(dir);
+            return;
+        }
         strcat(file_dir, "/");
         strcat(file_dir, dir);
+        // 463 File not found
         if (!isFile(file_dir))
         {
-            printf("%s\n", file_dir);
             send_response(sock_control, 463);
             free(user);
             free(dir);
@@ -385,6 +393,7 @@ void ftserve_share(int sock_control, int sock_data, char *arg)
         strcat(shared_dir, user);
         strcat(shared_dir, "/.shared");
         shared = fopen(shared_dir, "a");
+        // 462 User not found
         if (!shared)
         {
             send_response(sock_control, 462);
@@ -392,6 +401,7 @@ void ftserve_share(int sock_control, int sock_data, char *arg)
             free(dir);
             return;
         }
+        // 261 Shared successfully
         fprintf(shared, "%s\n", file_dir);
         send_response(sock_control, 261);
         fclose(shared);

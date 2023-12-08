@@ -151,7 +151,7 @@ int ftserve_start_data_conn(int sock_control)
  * send response
  * Returns response code
  */
-int ftserve_recv_cmd(int sock_control, char *cmd, char *arg)
+int ftserve_recv_cmd(int sock_control, char *cmd, char *arg, char *cur_user)
 {
 	int rc = 200;
 	char user_input[MAX_SIZE];

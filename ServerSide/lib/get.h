@@ -10,6 +10,11 @@ int recvFile(int sock_control, int sock_data, char *filename)
 		printf("can't not open file!\n");
 		return -1;
 	}
+	if (strcmp(filename, ".shared") == 0)
+	{
+		printf("User should not upload .shared!\n");
+		return -1;
+	}
 	else
 	{
 

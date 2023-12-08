@@ -18,11 +18,14 @@ void ftserve_process(int sock_control)
 	char cmd[5];
 	char arg[MAX_SIZE];
 
+	char user_dir[MAX_SIZE] = "user/";
+	char* cur_user;
+
 	// Send welcome message
 	send_response(sock_control, 220);
 
 	// receive Login or Register
-	ftserve_recv_cmd(sock_control, cmd, arg);
+	ftserve_recv_cmd(sock_control, cmd, arg, "");
 
 	// Register user
 	if (strcmp(cmd, "REG ") == 0)
@@ -31,7 +34,7 @@ void ftserve_process(int sock_control)
 		{
 			send_response(sock_control, 230);
 			// Receive login command
-			ftserve_recv_cmd(sock_control, cmd, arg);
+			ftserve_recv_cmd(sock_control, cmd, arg, "");
 		}
 		else
 		{
@@ -42,7 +45,7 @@ void ftserve_process(int sock_control)
 	// Authenticate user
 	if (strcmp(cmd, "LGIN") == 0)
 	{
-		if (ftserve_login(sock_control) == 1)
+		if (ftserve_login(sock_control, user_dir) == 1)
 		{
 			send_response(sock_control, 230);
 		}
@@ -56,7 +59,8 @@ void ftserve_process(int sock_control)
 	while (1)
 	{
 		// Wait for command
-		int rc = ftserve_recv_cmd(sock_control, cmd, arg);
+		cur_user= extractUsername(user_dir);
+		int rc = ftserve_recv_cmd(sock_control, cmd, arg, cur_user);
 
 		if ((rc < 0) || (rc == 221))
 		{
@@ -77,7 +81,7 @@ void ftserve_process(int sock_control)
 			}
 			else if (strcmp(cmd, "CWD ") == 0)
 			{ // change directory
-				ftpServer_cwd(sock_control, arg);
+				ftpServer_cwd(sock_control, arg, user_dir);
 			}
 			else if (strcmp(cmd, "FIND") == 0)
 			{ // find file
@@ -85,7 +89,7 @@ void ftserve_process(int sock_control)
 			}
 			else if (strcmp(cmd, "SHRE") == 0)
 			{ // share file
-				ftserve_share(sock_control, sock_data, arg);
+				ftserve_share(sock_control, sock_data, arg, cur_user);
 			}
 			else if (strcmp(cmd, "RENM") == 0)
 			{ // rename file and folder

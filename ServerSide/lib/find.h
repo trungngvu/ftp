@@ -1,9 +1,18 @@
+// Structure to hold the result (number of files and file paths)
+typedef struct
+{
+    int count;
+    char **files;
+} SearchResult;
+
 /**
  * Find path of the file in the dirPath
- * Return dirPath if found, NULL if not
+ * Return a SearchResult structure containing the count and file paths
  */
-char *searchInDirectory(char *dirPath, char *fileName)
+SearchResult searchInDirectory(char *dirPath, char *fileName)
 {
+    SearchResult result = {0, NULL};
+
     DIR *dir;
     struct dirent *entry;
     if ((dir = opendir(dirPath)) == NULL)
@@ -11,6 +20,7 @@ char *searchInDirectory(char *dirPath, char *fileName)
         perror("opendir");
         exit(EXIT_FAILURE);
     }
+
     while ((entry = readdir(dir)) != NULL)
     {
         if (entry->d_type == DT_DIR)
@@ -20,28 +30,33 @@ char *searchInDirectory(char *dirPath, char *fileName)
             {
                 char path[PATH_MAX];
                 snprintf(path, PATH_MAX, "%s/%s", dirPath, entry->d_name);
-                char *result = searchInDirectory(path, fileName);
-                if (result != NULL)
+                SearchResult subdirResult = searchInDirectory(path, fileName);
+
+                // Merge the results
+                result.count += subdirResult.count;
+                result.files = realloc(result.files, result.count * sizeof(char *));
+                for (int i = 0; i < subdirResult.count; ++i)
                 {
-                    closedir(dir);
-                    return result;
+                    result.files[result.count - subdirResult.count + i] = subdirResult.files[i];
                 }
+
+                free(subdirResult.files);
             }
         }
         else
         {
             if (strcmp(entry->d_name, fileName) == 0)
             {
-                char *filePath = (char *)malloc(PATH_MAX);
-                snprintf(filePath, PATH_MAX, "%s/%s\n", dirPath, entry->d_name);
-                closedir(dir);
-                return filePath;
+                result.count++;
+                result.files = realloc(result.files, result.count * sizeof(char *));
+                result.files[result.count - 1] = (char *)malloc(PATH_MAX);
+                snprintf(result.files[result.count - 1], PATH_MAX, "%s/%s", dirPath, entry->d_name);
             }
         }
     }
 
     closedir(dir);
-    return NULL;
+    return result;
 }
 
 /**
@@ -54,18 +69,26 @@ void ftserve_find(int sock_control, int sock_data, char *filename)
     char curr_dir[MAX_SIZE - 2];
     memset(curr_dir, 0, MAX_SIZE);
     getcwd(curr_dir, sizeof(curr_dir));
-    char *foundDir = searchInDirectory(curr_dir, filename);
+    SearchResult result = searchInDirectory(curr_dir, filename);
+
     // File found
-    if (foundDir != NULL)
+    if (result.count > 0)
     {
         send_response(sock_control, 241);
-        if (send(sock_data, foundDir, strlen(foundDir), 0) < 0)
+        send_response(sock_control, result.count);
+        for (int i = 0; i < result.count; ++i)
         {
-            perror("error");
-            send_response(sock_control, 550);
+            strcat(result.files[i], "\n");
+            if (send(sock_data, result.files[i], strlen(result.files[i]), 0) < 0)
+            {
+                perror("error");
+                send_response(sock_control, 550);
+            }
+            free(result.files[i]); // Free each file path
         }
     }
     // File not found
     else
         send_response(sock_control, 441);
+    free(result.files); // Free the array of file paths
 }

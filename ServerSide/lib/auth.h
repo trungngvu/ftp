@@ -16,15 +16,114 @@ void sha256(const char *input, char *output)
     output[2 * SHA256_DIGEST_LENGTH] = '\0';
 }
 
+// Function to remove duplicates from the file
+void removeDuplicates(FILE *file)
+{
+    char line[256];
+    char uniqueLines[10000][256]; // Assuming a maximum of 10000 lines and each line is not more than 256 characters
+
+    int numLines = 0;
+    fseek(file, 0, SEEK_SET); // Move the file pointer to the beginning
+
+    while (fgets(line, sizeof(line), file))
+    {
+        // Remove newline character
+        strtok(line, "\n");
+
+        int isDuplicate = 0;
+
+        // Check if the line is a duplicate
+        for (int i = 0; i < numLines; ++i)
+        {
+            if (strcmp(line, uniqueLines[i]) == 0)
+            {
+                isDuplicate = 1;
+                break;
+            }
+        }
+
+        // If not a duplicate, add it to the unique lines array
+        if (!isDuplicate)
+        {
+            strcpy(uniqueLines[numLines], line);
+            numLines++;
+        }
+    }
+
+    // Move the file pointer to the beginning and truncate the file
+    freopen(NULL, "w", file);
+
+    // Write the unique lines back to the file
+    for (int i = 0; i < numLines; ++i)
+    {
+        if (strcmp(uniqueLines[i], "\n") == 0)
+            continue;
+        fprintf(file, "%s\n", uniqueLines[i]);
+    }
+}
+
+// Function to clean up the file
+void cleanUpFile(const char *filename)
+{
+    FILE *file = fopen(filename, "r+");
+
+    if (file == NULL)
+    {
+        perror("Error opening file");
+        return;
+    }
+
+    char line[256];
+    FILE *tempFile = tmpfile();
+
+    // Copy valid lines to a temporary file
+    while (fgets(line, sizeof(line), file))
+    {
+        // Remove newline character
+        strtok(line, "\n");
+        char dir[MAX_SIZE] = "";
+        strcat(dir, root_dir);
+        strcat(dir, line);
+
+        if (isFile(dir))
+        {
+            fprintf(tempFile, "%s\n", line);
+        }
+    }
+
+    // Move the file pointer to the beginning and truncate the original file
+    freopen(NULL, "w", file);
+
+    // Copy the content from the temporary file back to the original file
+    fseek(tempFile, 0, SEEK_SET);
+    while (fgets(line, sizeof(line), tempFile))
+    {
+        fprintf(file, "%s\n", line);
+    }
+
+    // Close the files
+    fclose(file);
+    fclose(tempFile);
+
+    // Remove duplicates from the cleaned file
+    file = fopen(filename, "r+");
+    if (file != NULL)
+    {
+        removeDuplicates(file);
+        fclose(file);
+    }
+}
+
 /**
  * Authenticate a user's credentials
  * Return 1 if authenticated, 0 if not
  */
-int ftserve_check_user(char *user, char *pass)
+int ftserve_check_user(char *user, char *pass, char *user_dir)
 {
     char username[MAX_SIZE];
     char password[MAX_SIZE];
     char curDir[MAX_SIZE];
+    char shared[MAX_SIZE] = "";
     int isLock;
     char *pch;
     char buf[MAX_SIZE];
@@ -67,12 +166,23 @@ int ftserve_check_user(char *user, char *pass)
         if ((strcmp(user, username) == 0) && (strcmp(outputBuffer, password) == 0 && (isLock == 0)))
         {
             auth = 1;
+            // Lock user to prevent concurrent login
             toggleUserLock(user, 1);
+
+            // Change dir to user root dir
             strcat(user_dir, username);
             chdir(user_dir);
+
+            // Save user root dir to a global variable for future use
             getcwd(curDir, sizeof(curDir));
             strcpy(user_dir, curDir);
-            strcpy(cur_user, user);
+
+            // Clean up user's .shared file
+            strcat(shared, root_dir);
+            strcat(shared, "/user/");
+            strcat(shared, user);
+            strcat(shared, "/.shared");
+            cleanUpFile(shared);
             break;
         }
     }
@@ -125,7 +235,7 @@ int ftserve_check_username(char *user)
 /**
  * Log in connected client
  */
-int ftserve_login(int sock_control)
+int ftserve_login(int sock_control, char * user_dir)
 {
     char buf[MAX_SIZE];
     char user[MAX_SIZE];
@@ -156,7 +266,7 @@ int ftserve_login(int sock_control)
 
     strcpy(pass, buf + 5); // 'PASS ' has 5 char
 
-    return (ftserve_check_user(user, pass));
+    return (ftserve_check_user(user, pass, user_dir));
 }
 
 /**

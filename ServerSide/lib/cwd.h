@@ -16,7 +16,7 @@ int isSubdirectory(const char *baseDir, const char *dir)
  * Change directory
  * Return -1 on error, 0 on success
  */
-int ftpServer_cwd(int sock_control, char *folderName)
+int ftpServer_cwd(int sock_control, char *folderName, char *user_dir)
 {
     char cur_dir[MAX_SIZE];
     char prev_dir[MAX_SIZE];

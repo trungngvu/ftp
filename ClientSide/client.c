@@ -122,7 +122,11 @@ int main(int argc, char const *argv[])
 					int repl = read_reply(sock_control);
 					// File found
 					if (repl == 241)
-						ftclient_list(data_sock, sock_control); // ham nay in mess tu server
+					{
+						int nums = read_reply(sock_control);
+						for (int i = 0; i < nums; ++i)
+							ftclient_list(data_sock, sock_control); // ham nay in mess tu server
+					}
 					else if (repl == 441)
 						printf("441 File not found!\n");
 				}
@@ -173,6 +177,8 @@ int main(int argc, char const *argv[])
 						printf("462 User not found\n");
 					else if (repl == 463)
 						printf("463 File not found\n");
+					else if (repl == 464)
+						printf("464 Must not share to yourself\n");
 					else if (repl == 461)
 						printf("461 Syntax error (share <username> <filename>)\n");
 				}
