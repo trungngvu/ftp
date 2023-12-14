@@ -1,6 +1,6 @@
 CFLAGS = -c -Wall
 CC = gcc
-LIBS =  -lm
+LIBS =  
 
 all: cli
 

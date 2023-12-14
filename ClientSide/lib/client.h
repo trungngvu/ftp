@@ -1,5 +1,6 @@
 #include "common.h"
 #include "connect.h"
+#include "zip.h"
 #include "reply_command.h"
 #include "auth.h"
 #include "get.h"

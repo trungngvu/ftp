@@ -70,6 +70,21 @@ int send_response(int sockfd, int rc)
 }
 
 /**
+ * Receive a response from server
+ * Returns -1 on error, return code on success
+ */
+int read_reply(int sock_control)
+{
+	int retcode = 0;
+	if (recv(sock_control, &retcode, sizeof(retcode), 0) < 0)
+	{
+		perror("client: error reading message from server\n");
+		return -1;
+	}
+	return retcode;
+}
+
+/**
  * Receive data on sockfd
  * Returns -1 on error, number of bytes received
  * on success

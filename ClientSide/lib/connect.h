@@ -79,3 +79,14 @@ int ftclient_open_conn(int sock_con)
 	close(sock_listen);
 	return sock_conn;
 }
+
+int send_response(int sockfd, int rc)
+{
+	int conv = rc;
+	if (send(sockfd, &conv, sizeof(conv), 0) < 0)
+	{
+		perror("error sending...\n");
+		return -1;
+	}
+	return 0;
+}

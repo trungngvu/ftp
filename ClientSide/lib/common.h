@@ -79,3 +79,25 @@ void read_input(char *user_input, int size)
 	if (user_input[n - 1] == '\r')
 		user_input[n - 1] = '\0';
 }
+
+// Function to check if a path corresponds to a file
+int isFile(const char *path)
+{
+	struct stat pathStat;
+	if (stat(path, &pathStat) == 0)
+	{
+		return S_ISREG(pathStat.st_mode);
+	}
+	return 0; // Return 0 for error or if the path is not a regular file
+}
+
+// Function to check if a path corresponds to a directory (folder)
+int isDirectory(const char *path)
+{
+	struct stat pathStat;
+	if (stat(path, &pathStat) == 0)
+	{
+		return S_ISDIR(pathStat.st_mode);
+	}
+	return 0; // Return 0 for error or if the path is not a directory
+}

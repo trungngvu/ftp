@@ -10,6 +10,21 @@ void ftserve_retr(int sock_control, int sock_data, char *filename)
 	memset(data, 0, MAX_SIZE);
 	size_t num_read;
 
+	char tempZip[MAX_SIZE];
+	int isDir = isDirectory(filename);
+
+	if (isDir)
+	{
+		strcpy(tempZip, filename);
+		strcat(tempZip, ".zip");
+		zipFolder(filename, tempZip);
+		strcpy(filename, tempZip);
+		// tell client that we're sending a folder
+		send_response(sock_control, 0);
+	}
+	else
+		send_response(sock_control, 1);
+
 	fd = fopen(filename, "r");
 
 	if (!fd)
@@ -41,5 +56,7 @@ void ftserve_retr(int sock_control, int sock_data, char *filename)
 		send_response(sock_control, 226);
 
 		fclose(fd);
+		if (isDir)
+			remove(filename);
 	}
 }

@@ -1,11 +1,25 @@
 void upload(int data_sock, char *filename, int sock_control)
 {
-
 	FILE *fd = NULL;
 	char data[MAX_SIZE];
 	memset(data, 0, MAX_SIZE);
 	size_t num_read;
 	int stt;
+
+	char tempZip[MAX_SIZE];
+	int isDir = isDirectory(filename);
+
+	if (isDir)
+	{
+		strcpy(tempZip, filename);
+		strcat(tempZip, ".zip");
+		zipFolder(filename, tempZip);
+		strcpy(filename, tempZip);
+		// tell server that we're sending a folder
+		send_response(sock_control, 0);
+	}
+	else
+		send_response(sock_control, 1);
 
 	fd = fopen(filename, "r");
 
@@ -35,7 +49,8 @@ void upload(int data_sock, char *filename, int sock_control)
 			send(data_sock, data, num_read, 0);
 
 		} while (num_read > 0);
-
 		fclose(fd);
+		if (isDir)
+			remove(filename);
 	}
 }

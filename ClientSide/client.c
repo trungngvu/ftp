@@ -199,19 +199,7 @@ int main(int argc, char const *argv[])
 				}
 				else if (strcmp(cmd.code, "RETR") == 0)
 				{
-					// wait for reply (is file valid)
-					if (read_reply(sock_control) == 550)
-					{
-						print_reply(550);
-						close(data_sock);
-						continue;
-					}
-					clock_t start = clock();
 					ftclient_get(data_sock, sock_control, cmd.arg);
-					clock_t end = clock();
-					double cpu_time = ((double)(end - start)) / CLOCKS_PER_SEC;
-					print_reply(read_reply(sock_control));
-					printf("Time taken %lf\n", cpu_time);
 				}
 				else if (strcmp(cmd.code, "STOR") == 0)
 				{

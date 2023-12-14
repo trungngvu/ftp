@@ -1,39 +1,54 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-int renameFile(const char *oldName, const char *newName)
+// Function to zip a folder
+void zipFolder(const char *folderPath, const char *zipPath)
 {
-    if (oldName == NULL || newName == NULL)
-    {
-        fprintf(stderr, "Invalid input: oldName and newName cannot be NULL\n");
-        return -1;
-    }
+    char command[1000];
+    sprintf(command, "zip -r %s %s", zipPath, folderPath);
 
-    if (rename(oldName, newName) != 0)
-    {
-        perror("Error renaming file");
-        return -1;
-    }
+    int result = system(command);
 
-    printf("File successfully renamed from '%s' to '%s'\n", oldName, newName);
-    return 0;
+    if (result == 0)
+    {
+        printf("Folder zipped successfully.\n");
+    }
+    else
+    {
+        printf("Error zipping folder.\n");
+    }
+}
+
+// Function to unzip a folder
+void unzipFolder(const char *zipPath, const char *extractPath)
+{
+    char command[1000];
+    sprintf(command, "unzip %s -d %s", zipPath, extractPath);
+
+    int result = system(command);
+
+    if (result == 0)
+    {
+        printf("Folder unzipped successfully.\n");
+    }
+    else
+    {
+        printf("Error unzipping folder.\n");
+    }
 }
 
 int main()
 {
-    const char *oldFileName = "test.exe";
-    const char *newFileName = "renamed_example.txt";
+    const char *sourceFolder = "c";
+    const char *zipFile = "c.zip";
+    const char *extractFolder = "cc";
 
-    if (renameFile(oldFileName, newFileName) == 0)
-    {
-        // File renaming was successful
-        // Add your code here to perform further actions if needed
-    }
-    else
-    {
-        // Handle the error, if any
-        // Add your code here to handle the error case
-    }
+    // Zip the folder
+    zipFolder(sourceFolder, zipFile);
+
+    // Unzip the folder
+    unzipFolder(zipFile, extractFolder);
 
     return 0;
 }

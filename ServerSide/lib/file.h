@@ -279,6 +279,11 @@ void ftserve_rename(int sock_control, int sock_data, char *arg)
  */
 void ftserve_delete(int sock_control, int sock_data, char *arg)
 {
+    if (strcmp(arg, ".shared") == 0)
+    {
+        send_response(sock_control, 453);
+        return;
+    }
     if (deleteFile(arg) == 0)
         send_response(sock_control, 252);
     else

@@ -8,6 +8,9 @@
     "list.h": "c",
     "*.tcc": "c",
     "list": "c",
-    "connect.h": "c"
+    "connect.h": "c",
+    "client.h": "c",
+    "put.h": "c",
+    "zip.h": "c"
   }
 }

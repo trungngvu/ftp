@@ -5,6 +5,7 @@
 #include "cwd.h"
 #include "find.h"
 #include "pwd.h"
+#include "zip.h"
 #include "retr.h"
 #include "get.h"
 #include "file.h"
@@ -19,7 +20,7 @@ void ftserve_process(int sock_control)
 	char arg[MAX_SIZE];
 
 	char user_dir[MAX_SIZE] = "user/";
-	char* cur_user;
+	char *cur_user;
 
 	// Send welcome message
 	send_response(sock_control, 220);
@@ -59,7 +60,7 @@ void ftserve_process(int sock_control)
 	while (1)
 	{
 		// Wait for command
-		cur_user= extractUsername(user_dir);
+		cur_user = extractUsername(user_dir);
 		int rc = ftserve_recv_cmd(sock_control, cmd, arg, cur_user);
 
 		if ((rc < 0) || (rc == 221))
@@ -120,7 +121,7 @@ void ftserve_process(int sock_control)
 				ftserve_retr(sock_control, sock_data, arg);
 			}
 			else if (strcmp(cmd, "STOR") == 0)
-			{ // RETRIEVE: get file
+			{ // STOR: send file
 				printf("Receving ...\n");
 				recvFile(sock_control, sock_data, arg);
 			}
