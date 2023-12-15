@@ -4,6 +4,9 @@ LIBS =
 
 all: cli
 
+install: 
+	sudo apt install zip unzip
+
 cli: client.c lib/client.h
 	 ${CC} -o client client.c
 

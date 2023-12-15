@@ -253,6 +253,46 @@ int moveDirectory(char *sourcePath, char *destinationPath)
     }
 }
 
+void appendLineToSharedFile(const char *username, const char *line)
+{
+    char filePath[256];
+    snprintf(filePath, sizeof(filePath), "%s/.shared", username);
+
+    FILE *file = fopen(filePath, "a");
+    if (file == NULL)
+    {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(file, "%s\n", line);
+
+    fclose(file);
+}
+
+void processUserFolder(const char *userFolderPath, const char *excludedUsername, const char *line) {
+    DIR *dir = opendir(userFolderPath);
+    if (dir == NULL) {
+        perror("Error opening directory");
+        exit(EXIT_FAILURE);
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_DIR && strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+            char subFolderPath[MAX_SIZE];
+            snprintf(subFolderPath, sizeof(subFolderPath), "%s/%s", userFolderPath, entry->d_name);
+
+            // Skip the excludedUsername
+            if (strcmp(entry->d_name, excludedUsername) != 0) {
+                appendLineToSharedFile(subFolderPath, line);
+            }
+        }
+    }
+
+    closedir(dir);
+}
+
 /**
  * Rename file and folder
  * over data connection
@@ -386,30 +426,39 @@ void ftserve_share(int sock_control, int sock_data, char *arg, char *cur_user)
         strcat(file_dir, "/");
         strcat(file_dir, dir);
         // 463 File not found
-        if (!isFile(file_dir))
+        if (!isFile(file_dir) && !isDirectory(file_dir))
         {
             send_response(sock_control, 463);
             free(user);
             free(dir);
             return;
         }
+
         strcpy(file_dir, file_dir + strlen(root_dir));
-        FILE *shared;
-        strcat(shared_dir, user);
-        strcat(shared_dir, "/.shared");
-        shared = fopen(shared_dir, "a");
-        // 462 User not found
-        if (!shared)
+        // If share to all user
+        if (strcmp(user, "everyone") == 0 || strcmp(user, "all") == 0)
         {
-            send_response(sock_control, 462);
-            free(user);
-            free(dir);
-            return;
+            processUserFolder(shared_dir, cur_user, file_dir);
+        }
+        else // Share to specific user
+        {
+            FILE *shared;
+            strcat(shared_dir, user);
+            strcat(shared_dir, "/.shared");
+            shared = fopen(shared_dir, "a");
+            // 462 User not found
+            if (!shared)
+            {
+                send_response(sock_control, 462);
+                free(user);
+                free(dir);
+                return;
+            }
+            fprintf(shared, "%s\n", file_dir);
+            fclose(shared);
         }
         // 261 Shared successfully
-        fprintf(shared, "%s\n", file_dir);
         send_response(sock_control, 261);
-        fclose(shared);
         free(user);
         free(dir);
     }

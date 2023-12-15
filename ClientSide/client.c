@@ -112,7 +112,7 @@ int main(int argc, char const *argv[])
 					int repl = read_reply(sock_control);
 					if (repl == 250)
 						print_reply(250);
-					else if (repl = 551)
+					else if (repl == 551)
 						print_reply(551);
 					else
 						printf("%s is not a directory\n", cmd.arg);
@@ -176,7 +176,7 @@ int main(int argc, char const *argv[])
 					else if (repl == 462)
 						printf("462 User not found\n");
 					else if (repl == 463)
-						printf("463 File not found\n");
+						printf("463 File/Folder not found\n");
 					else if (repl == 464)
 						printf("464 Must not share to yourself\n");
 					else if (repl == 461)

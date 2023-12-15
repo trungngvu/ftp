@@ -167,7 +167,7 @@ int ftserve_check_user(char *user, char *pass, char *user_dir)
         {
             auth = 1;
             // Lock user to prevent concurrent login
-            // toggleUserLock(user, 1);
+            toggleUserLock(user, 1);
 
             // Change dir to user root dir
             strcat(user_dir, username);
