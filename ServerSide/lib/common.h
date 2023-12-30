@@ -14,24 +14,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <ctype.h>
-#include <openssl/sha.h>
-
-#include <stdio.h>
-#include <dirent.h>
-#include <string.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <sys/stat.h>
-#include <ctype.h>
+#include <time.h>
 #include <openssl/sha.h>
 
 #define INVALID_SOCKET -1
@@ -42,7 +25,7 @@
 typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;
 
-// Currently logged in username
+// Currently logged in user directory
 char root_dir[MAX_SIZE];
 
 /**
@@ -235,4 +218,19 @@ char *extractUsername(char *path)
 
 	// Return the original path if no '/'
 	return path;
+}
+
+int containsDoubleDot(const char *str)
+{
+	int length = strlen(str);
+
+	for (int i = 0; i < length - 1; i++)
+	{
+		if (str[i] == '.' && str[i + 1] == '.')
+		{
+			return 1; // Found ".." in the string
+		}
+	}
+
+	return 0; // Not found
 }

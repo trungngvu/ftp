@@ -3,8 +3,9 @@
  * control message over control connection
  * Handles case of null or invalid filename
  */
-void ftserve_retr(int sock_control, int sock_data, char *filename)
+void ftserve_retr(int sock_control, int sock_data, char *filename, char *cur_user)
 {
+	printf("%s\n", filename);
 	FILE *fd = NULL;
 	char data[MAX_SIZE];
 	memset(data, 0, MAX_SIZE);
@@ -54,6 +55,12 @@ void ftserve_retr(int sock_control, int sock_data, char *filename)
 
 		// send message: 226: closing conn, file transfer successful
 		send_response(sock_control, 226);
+		// LOG
+		char logstr[MAX_SIZE] = "";
+		strcat(logstr, cur_user);
+		strcat(logstr, " RETRIEVE ");
+		strcat(logstr, filename);
+		log(logstr);
 
 		fclose(fd);
 		if (isDir)

@@ -26,7 +26,7 @@ void upload(int data_sock, char *filename, int sock_control)
 	if (!fd)
 	{
 		// send error code (550 Requested action not taken)
-		printf("ko the mo file\n");
+		printf("550 Requested action not taken\n");
 		stt = 550;
 		send(sock_control, &stt, sizeof(stt), 0);
 	}

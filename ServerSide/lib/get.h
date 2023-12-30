@@ -1,4 +1,4 @@
-int recvFile(int sock_control, int sock_data, char *filename)
+int recvFile(int sock_control, int sock_data, char *filename, char* cur_user)
 {
 	char data[MAX_SIZE];
 	int size, stt = 0;
@@ -38,5 +38,11 @@ int recvFile(int sock_control, int sock_data, char *filename)
 		unzipFolder(filename, folderName);
 		remove(filename);
 	}
+	// LOG
+	char logstr[MAX_SIZE] = "";
+	strcat(logstr, cur_user);
+	strcat(logstr, " STOR ");
+	strcat(logstr, filename);
+	log(logstr);
 	return 0;
 }

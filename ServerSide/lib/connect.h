@@ -189,6 +189,10 @@ int ftserve_recv_cmd(int sock_control, char *cmd, char *arg, char *cur_user)
 	{
 		chdir(root_dir);
 		toggleUserLock(cur_user, 0);
+		char logstr[MAX_SIZE] = "";
+		strcat(logstr, "QUIT ");
+		strcat(logstr, cur_user);
+		log(logstr);
 		rc = 221;
 	}
 	else if ((strcmp(cmd, "USER") == 0) || (strcmp(cmd, "PASS") == 0) ||

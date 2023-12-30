@@ -64,12 +64,19 @@ SearchResult searchInDirectory(char *dirPath, char *fileName)
  * over data connection
  * Return -1 on error, 0 on success
  */
-void ftserve_find(int sock_control, int sock_data, char *filename)
+void ftserve_find(int sock_control, int sock_data, char *filename, char *cur_user, char *user_dir)
 {
-    char curr_dir[MAX_SIZE - 2];
+    char curr_dir[MAX_SIZE - 2], msg[MAX_SIZE] = "~";
     memset(curr_dir, 0, MAX_SIZE);
     getcwd(curr_dir, sizeof(curr_dir));
     SearchResult result = searchInDirectory(curr_dir, filename);
+
+    // LOG
+    char logstr[MAX_SIZE] = "";
+    strcat(logstr, cur_user);
+    strcat(logstr, " FIND ");
+    strcat(logstr, filename);
+    log(logstr);
 
     // File found
     if (result.count > 0)
@@ -78,8 +85,10 @@ void ftserve_find(int sock_control, int sock_data, char *filename)
         send_response(sock_control, result.count);
         for (int i = 0; i < result.count; ++i)
         {
-            strcat(result.files[i], "\n");
-            if (send(sock_data, result.files[i], strlen(result.files[i]), 0) < 0)
+            strcpy(result.files[i], result.files[i] + strlen(user_dir));
+            strcat(msg, result.files[i]);
+            strcat(msg, "\n");
+            if (send(sock_data, msg, strlen(msg), 0) < 0)
             {
                 perror("error");
                 send_response(sock_control, 550);

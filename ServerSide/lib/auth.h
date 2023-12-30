@@ -183,6 +183,11 @@ int ftserve_check_user(char *user, char *pass, char *user_dir)
             strcat(shared, user);
             strcat(shared, "/.shared");
             cleanUpFile(shared);
+
+            // LOG
+            char logstr[MAX_SIZE] = "LOGIN ";
+            strcat(logstr, user);
+            log(logstr);
             break;
         }
     }
@@ -337,6 +342,11 @@ int ftserve_register(int sock_control)
     FILE *shared;
     shared = fopen(userDir, "w");
     fclose(shared);
+
+    // LOG
+    char logstr[MAX_SIZE] = "REG ";
+    strcat(logstr, user);
+    log(logstr);
 
     fclose(fptr);
     return 1;

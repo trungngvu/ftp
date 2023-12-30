@@ -138,7 +138,9 @@ int main(int argc, char const *argv[])
 					else if (repl == 451)
 						printf("451 Rename failure\n");
 					else if (repl == 452)
-						printf("452 Syntax error (renm <oldfilename> <newfilename>)\n");
+						printf("452 Syntax error (rename <oldfilename> <newfilename>)\n");
+					else if (repl == 444)
+						printf("444 Directory must not contain \"..\"\n");
 				}
 				else if (strcmp(cmd.code, "DEL ") == 0)
 				{
@@ -147,6 +149,8 @@ int main(int argc, char const *argv[])
 						printf("252 Delete successfully\n");
 					else if (repl == 453)
 						printf("451 Delete failure\n");
+					else if (repl == 444)
+						printf("444 Directory must not contain \"..\"\n");
 				}
 				else if (strcmp(cmd.code, "MOV ") == 0)
 				{
@@ -156,7 +160,9 @@ int main(int argc, char const *argv[])
 					else if (repl == 454)
 						printf("454 Move failure\n");
 					else if (repl == 455)
-						printf("455 Syntax error (mov <filepath> <newfilepath>)\n");
+						printf("455 Syntax error (move <filepath> <newfilepath>)\n");
+					else if (repl == 444)
+						printf("444 Directory must not contain \"..\"\n");
 				}
 				else if (strcmp(cmd.code, "CPY ") == 0)
 				{
@@ -166,7 +172,9 @@ int main(int argc, char const *argv[])
 					else if (repl == 454)
 						printf("454 Copy failure\n");
 					else if (repl == 455)
-						printf("455 Syntax error (cpy <filepath> <newfilepath>)\n");
+						printf("455 Syntax error (copy <filepath> <newfilepath>)\n");
+					else if (repl == 444)
+						printf("444 Directory must not contain \"..\"\n");
 				}
 				else if (strcmp(cmd.code, "SHRE") == 0)
 				{
@@ -189,6 +197,8 @@ int main(int argc, char const *argv[])
 						printf("254 Mkdir successfully\n");
 					else if (repl == 456)
 						printf("451 Mkdir failure\n");
+					else if (repl == 444)
+						printf("444 Directory must not contain \"..\"\n");
 				}
 				else if (strcmp(cmd.code, "PWD ") == 0)
 				{
@@ -205,7 +215,6 @@ int main(int argc, char const *argv[])
 				{
 					printf("Uploading ...\n");
 					upload(data_sock, cmd.arg, sock_control);
-					printf("xong\n");
 				}
 				close(data_sock);
 			}

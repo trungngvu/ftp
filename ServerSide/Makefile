@@ -1,4 +1,4 @@
-CFLAGS = -c -Wall
+CFLAGS = -c -w
 CC = gcc
 LIBS =  -lssl -lcrypto
 
