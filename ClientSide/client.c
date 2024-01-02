@@ -4,7 +4,7 @@ int main(int argc, char const *argv[])
 {
 	int sock_control;
 	int data_sock, retcode;
-	char user_input[MAX_SIZE];
+	char user_input[MAX_SIZE], arg[MAX_SIZE];
 	struct command cmd;
 
 	if (argc != 2)
@@ -42,6 +42,14 @@ int main(int argc, char const *argv[])
 		exit(1);
 	}
 
+	// Exchange public key with server
+	readKey();
+	recv(sock_control, arg, sizeof(arg), 0);
+	server_public_key = string_to_rsa_key(arg, 0);
+	strcpy(arg, rsa_key_to_string(public_key, 0));
+	send(sock_control, arg, sizeof(arg), 0);
+	sendEncrypted(sock_control, "Hello", server_public_key);
+
 	// Get connection, welcome messages
 	printf("Connected to %s.\n", argv[1]);
 	print_reply(read_reply(sock_control));
@@ -71,7 +79,7 @@ int main(int argc, char const *argv[])
 		{
 
 			// Send command to server
-			if (send(sock_control, user_input, strlen(user_input), 0) < 0)
+			if (sendEncrypted(sock_control, user_input, server_public_key) < 0)
 			{
 				close(sock_control);
 				exit(1);

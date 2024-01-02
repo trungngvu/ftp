@@ -18,14 +18,14 @@ char *extractUsername(char *path)
 
 int ftclient_get(int data_sock, int sock_control, char *arg)
 {
-	char data[MAX_SIZE];
-	int size, stt = 0;
+	char data[MAX_SIZE], stt[10] = "0";
+	int size;
 	int isReceiveFile = read_reply(sock_control);
 
-	recv(sock_control, &stt, sizeof(stt), 0);
-	if (stt == 550)
+	receiveDecrypted(sock_control, stt, private_key);
+	if (strcmp(stt, "550") == 0)
 	{
-		print_reply(stt);
+		print_reply(atoi(stt));
 		return -1;
 	}
 
@@ -37,7 +37,7 @@ int ftclient_get(int data_sock, int sock_control, char *arg)
 		arg = extractUsername(arg);
 	FILE *fd = fopen(arg, "w");
 
-	while ((size = recv(data_sock, data, MAX_SIZE, 0)) > 0)
+	while ((size = receiveDecrypted(data_sock, data, private_key)) > 0)
 		fwrite(data, 1, size, fd);
 
 	if (size < 0)

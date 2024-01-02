@@ -1,4 +1,5 @@
 #include "common.h"
+#include "RSA.h"
 #include "connect.h"
 #include "zip.h"
 #include "reply_command.h"

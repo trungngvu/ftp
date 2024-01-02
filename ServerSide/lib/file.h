@@ -255,6 +255,9 @@ int copyDirectory(char *sourcePath, char *destinationPath)
 // Function to recursively move files and subdirectories
 int moveDirectory(char *sourcePath, char *destinationPath)
 {
+    if (strcmp(destinationPath, ".") == 0)
+        return 0;
+
     if (copyDirectory(sourcePath, destinationPath) == 0)
     {
         // If copy is successful, remove the source directory
@@ -318,7 +321,7 @@ void processUserFolder(const char *userFolderPath, const char *excludedUsername,
  * Rename file and folder
  * over data connection
  */
-void ftserve_rename(int sock_control, int sock_data, char *arg)
+void ftserve_rename(int sock_control, int sock_data, char *arg, RSA *key)
 {
     char *from, *to;
     if (splitString(arg, &from, &to) == 0)
@@ -326,93 +329,93 @@ void ftserve_rename(int sock_control, int sock_data, char *arg)
         // 444 Directory must not contain ".."
         if (containsDoubleDot(from) || containsDoubleDot(to))
         {
-            send_response(sock_control, 444);
+            send_response(sock_control, 444, key);
             free(from);
             free(to);
             return;
         }
         if (renameFile(from, to) == 0)
         {
-            send_response(sock_control, 251);
+            send_response(sock_control, 251, key);
             // LOG
             char logstr[MAX_SIZE] = "RENAME ";
             strcat(logstr, from);
             strcat(logstr, " ");
             strcat(logstr, to);
-            log(logstr);
+            logger(logstr);
         }
         else
-            send_response(sock_control, 451);
+            send_response(sock_control, 451, key);
         free(from);
         free(to);
     }
     else
-        send_response(sock_control, 452);
+        send_response(sock_control, 452, key);
 }
 
 /**
  * Delete file and folder
  * over data connection
  */
-void ftserve_delete(int sock_control, int sock_data, char *arg)
+void ftserve_delete(int sock_control, int sock_data, char *arg, RSA *key)
 {
     if (strcmp(arg, ".shared") == 0)
     {
-        send_response(sock_control, 453);
+        send_response(sock_control, 453, key);
         return;
     }
     // 444 Directory must not contain ".."
     if (containsDoubleDot(arg))
     {
-        send_response(sock_control, 444);
+        send_response(sock_control, 444, key);
         return;
     }
     if (deleteFile(arg) == 0)
     {
-        send_response(sock_control, 252);
+        send_response(sock_control, 252, key);
         // LOG
         char logstr[MAX_SIZE] = "DEL ";
         strcat(logstr, arg);
-        log(logstr);
+        logger(logstr);
     }
     else
-        send_response(sock_control, 453);
+        send_response(sock_control, 453, key);
 }
 
 /**
  * Make new directiory
  * over data connection
  */
-void ftserve_mkdir(int sock_control, int sock_data, char *arg)
+void ftserve_mkdir(int sock_control, int sock_data, char *arg, RSA *key)
 {
     // 444 Directory must not contain ".."
     if (containsDoubleDot(arg))
     {
-        send_response(sock_control, 444);
+        send_response(sock_control, 444, key);
         return;
     }
     if (strcmp(arg, ".shared") == 0)
     {
-        send_response(sock_control, 456);
+        send_response(sock_control, 456, key);
         return;
     }
     if (createDirectory(arg) == 0)
     {
-        send_response(sock_control, 254);
+        send_response(sock_control, 254, key);
         // LOG
         char logstr[MAX_SIZE] = "MKDIR ";
         strcat(logstr, arg);
-        log(logstr);
+        logger(logstr);
     }
     else
-        send_response(sock_control, 456);
+        send_response(sock_control, 456, key);
 }
 
 /**
  * Move file and folder
  * over data connection
  */
-void ftserve_move(int sock_control, int sock_data, char *arg)
+void ftserve_move(int sock_control, int sock_data, char *arg, RSA *key)
 {
     char *from, *to;
     if (splitString(arg, &from, &to) == 0)
@@ -420,7 +423,7 @@ void ftserve_move(int sock_control, int sock_data, char *arg)
         // 444 Directory must not contain ".."
         if (containsDoubleDot(from))
         {
-            send_response(sock_control, 444);
+            send_response(sock_control, 444, key);
             free(from);
             free(to);
             return;
@@ -428,55 +431,55 @@ void ftserve_move(int sock_control, int sock_data, char *arg)
         if (isFile(from))
             if (copyOrMoveFile(from, to, 1) == 0)
             {
-                send_response(sock_control, 253);
+                send_response(sock_control, 253, key);
                 // LOG
                 char logstr[MAX_SIZE] = "MOVE ";
                 strcat(logstr, from);
                 strcat(logstr, " ");
                 strcat(logstr, to);
-                log(logstr);
+                logger(logstr);
             }
             else
-                send_response(sock_control, 454);
+                send_response(sock_control, 454, key);
         else if (isDirectory(from))
         {
             strcat(to, "/");
             strcat(to, from);
             if (moveDirectory(from, to) == 0)
             {
-                send_response(sock_control, 253);
+                send_response(sock_control, 253, key);
                 // LOG
                 char logstr[MAX_SIZE] = "MOVE ";
                 strcat(logstr, from);
                 strcat(logstr, " ");
                 strcat(logstr, to);
-                log(logstr);
+                logger(logstr);
             }
             else
-                send_response(sock_control, 454);
+                send_response(sock_control, 454, key);
         }
         else
-            send_response(sock_control, 454);
+            send_response(sock_control, 454, key);
         free(from);
         free(to);
     }
     else
-        send_response(sock_control, 455);
+        send_response(sock_control, 455, key);
 }
 
 /**
  * Copy file and folder
  * over data connection
  */
-void ftserve_copy(int sock_control, int sock_data, char *arg)
+void ftserve_copy(int sock_control, int sock_data, char *arg, RSA *key)
 {
     char *from, *to;
     if (splitString(arg, &from, &to) == 0)
     {
         // 444 Directory must not contain ".."
-        if (containsDoubleDot(from) || containsDoubleDot(to))
+        if (containsDoubleDot(from))
         {
-            send_response(sock_control, 444);
+            send_response(sock_control, 444, key);
             free(from);
             free(to);
             return;
@@ -484,41 +487,41 @@ void ftserve_copy(int sock_control, int sock_data, char *arg)
         if (isFile(from))
             if (copyOrMoveFile(from, to, 0) == 0)
             {
-                send_response(sock_control, 253);
+                send_response(sock_control, 253, key);
                 // LOG
                 char logstr[MAX_SIZE] = "COPY ";
                 strcat(logstr, from);
                 strcat(logstr, " ");
                 strcat(logstr, to);
-                log(logstr);
+                logger(logstr);
             }
             else
-                send_response(sock_control, 454);
+                send_response(sock_control, 454, key);
         else if (isDirectory(from))
         {
             strcat(to, "/");
             strcat(to, from);
             if (copyDirectory(from, to) == 0)
             {
-                send_response(sock_control, 253);
+                send_response(sock_control, 253, key);
                 // LOG
                 char logstr[MAX_SIZE] = "COPY ";
                 strcat(logstr, from);
                 strcat(logstr, " ");
                 strcat(logstr, to);
-                log(logstr);
+                logger(logstr);
             }
             else
-                send_response(sock_control, 454);
+                send_response(sock_control, 454, key);
         }
         else
-            send_response(sock_control, 454);
+            send_response(sock_control, 454, key);
         free(from);
         free(to);
     }
     else
     {
-        send_response(sock_control, 455);
+        send_response(sock_control, 455, key);
         free(from);
         free(to);
     }
@@ -527,7 +530,7 @@ void ftserve_copy(int sock_control, int sock_data, char *arg)
 /**
  * Share file with other users
  */
-void ftserve_share(int sock_control, int sock_data, char *arg, char *cur_user)
+void ftserve_share(int sock_control, int sock_data, char *arg, char *cur_user, RSA *key)
 {
     char *user, *dir;
     char shared_dir[MAX_SIZE] = "";
@@ -540,7 +543,7 @@ void ftserve_share(int sock_control, int sock_data, char *arg, char *cur_user)
         // 444 Directory must not contain ".."
         if (containsDoubleDot(dir))
         {
-            send_response(sock_control, 444);
+            send_response(sock_control, 444, key);
             free(user);
             free(dir);
             return;
@@ -548,7 +551,7 @@ void ftserve_share(int sock_control, int sock_data, char *arg, char *cur_user)
         // 464 Must not share to yourself
         if (strcmp(user, cur_user) == 0)
         {
-            send_response(sock_control, 464);
+            send_response(sock_control, 464, key);
             free(user);
             free(dir);
             return;
@@ -558,7 +561,7 @@ void ftserve_share(int sock_control, int sock_data, char *arg, char *cur_user)
         // 463 File not found
         if (!isFile(file_dir) && !isDirectory(file_dir))
         {
-            send_response(sock_control, 463);
+            send_response(sock_control, 463, key);
             free(user);
             free(dir);
             return;
@@ -579,7 +582,7 @@ void ftserve_share(int sock_control, int sock_data, char *arg, char *cur_user)
             // 462 User not found
             if (!shared)
             {
-                send_response(sock_control, 462);
+                send_response(sock_control, 462, key);
                 free(user);
                 free(dir);
                 return;
@@ -588,7 +591,7 @@ void ftserve_share(int sock_control, int sock_data, char *arg, char *cur_user)
             fclose(shared);
         }
         // 261 Shared successfully
-        send_response(sock_control, 261);
+        send_response(sock_control, 261, key);
         // LOG
         char logstr[MAX_SIZE] = "";
         strcat(logstr, cur_user);
@@ -596,11 +599,11 @@ void ftserve_share(int sock_control, int sock_data, char *arg, char *cur_user)
         strcat(logstr, user);
         strcat(logstr, " ");
         strcat(logstr, dir);
-        log(logstr);
+        logger(logstr);
 
         free(user);
         free(dir);
     }
     else
-        send_response(sock_control, 461);
+        send_response(sock_control, 461, key);
 }

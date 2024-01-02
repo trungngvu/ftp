@@ -35,13 +35,13 @@ void print_reply(int rc)
  */
 int read_reply(int sock_control)
 {
-	int retcode = 0;
-	if (recv(sock_control, &retcode, sizeof(retcode), 0) < 0)
+	char retcode[10] = "0";
+	if (receiveDecrypted(sock_control, retcode, private_key) < 0)
 	{
 		perror("client: error reading message from server\n");
 		return -1;
 	}
-	return retcode;
+	return atoi(retcode);
 }
 
 /**
@@ -56,7 +56,7 @@ int ftclient_send_cmd(struct command *cmd, int sock_control)
 	sprintf(buffer, "%s %s", cmd->code, cmd->arg);
 
 	// Send command string to server
-	rc = send(sock_control, buffer, (int)strlen(buffer), 0);
+	rc = sendEncrypted(sock_control, buffer, server_public_key);
 	if (rc < 0)
 	{
 		perror("Error sending command to server");

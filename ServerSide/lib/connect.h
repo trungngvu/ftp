@@ -58,10 +58,12 @@ int socket_accept(int sock_listen)
 	return sockfd;
 }
 
-int send_response(int sockfd, int rc)
+int send_response(int sockfd, int rc, RSA *key)
 {
 	int conv = rc;
-	if (send(sockfd, &conv, sizeof(conv), 0) < 0)
+	char str[10];
+	sprintf(str, "%d", conv);
+	if (sendEncrypted(sockfd, str, key) < 0)
 	{
 		perror("error sending...\n");
 		return -1;
@@ -75,13 +77,13 @@ int send_response(int sockfd, int rc)
  */
 int read_reply(int sock_control)
 {
-	int retcode = 0;
-	if (recv(sock_control, &retcode, sizeof(retcode), 0) < 0)
+	char str[10];
+	if (receiveDecrypted(sock_control, str, private_key) < 0)
 	{
 		perror("client: error reading message from server\n");
 		return -1;
 	}
-	return retcode;
+	return atoi(str);
 }
 
 /**
@@ -92,7 +94,7 @@ int read_reply(int sock_control)
 int recv_data(int sockfd, char *buf, int bufsize)
 {
 	memset(buf, 0, bufsize);
-	int num_bytes = recv(sockfd, buf, bufsize, 0);
+	int num_bytes = receiveDecrypted(sockfd, buf, private_key);
 	if (num_bytes < 0)
 	{
 		return -1;
@@ -138,11 +140,11 @@ int socket_connect(int port, char *host)
  */
 int ftserve_start_data_conn(int sock_control)
 {
-	char buf[1024];
-	int wait, sock_data;
+	char buf[1024], wait[10];
+	int sock_data;
 
 	// Wait for go-ahead on control conn
-	if (recv(sock_control, &wait, sizeof wait, 0) < 0)
+	if (receiveDecrypted(sock_control, wait, private_key) < 0)
 	{
 		perror("Error while waiting");
 		return -1;
@@ -166,7 +168,7 @@ int ftserve_start_data_conn(int sock_control)
  * send response
  * Returns response code
  */
-int ftserve_recv_cmd(int sock_control, char *cmd, char *arg, char *cur_user)
+int ftserve_recv_cmd(int sock_control, char *cmd, char *arg, char *cur_user, RSA* key)
 {
 	int rc = 200;
 	char user_input[MAX_SIZE];
@@ -192,7 +194,7 @@ int ftserve_recv_cmd(int sock_control, char *cmd, char *arg, char *cur_user)
 		char logstr[MAX_SIZE] = "";
 		strcat(logstr, "QUIT ");
 		strcat(logstr, cur_user);
-		log(logstr);
+		logger(logstr);
 		rc = 221;
 	}
 	else if ((strcmp(cmd, "USER") == 0) || (strcmp(cmd, "PASS") == 0) ||
@@ -211,6 +213,6 @@ int ftserve_recv_cmd(int sock_control, char *cmd, char *arg, char *cur_user)
 		rc = 502;
 	}
 
-	send_response(sock_control, rc);
+	send_response(sock_control, rc, key);
 	return rc;
 }

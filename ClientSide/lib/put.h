@@ -27,14 +27,14 @@ void upload(int data_sock, char *filename, int sock_control)
 	{
 		// send error code (550 Requested action not taken)
 		printf("550 Requested action not taken\n");
-		stt = 550;
-		send(sock_control, &stt, sizeof(stt), 0);
+		char stt[] = "550";
+		sendEncrypted(sock_control, stt, server_public_key);
 	}
 	else
 	{
 		// send okay (150 File status okay)
-		stt = 150;
-		send(sock_control, &stt, sizeof(stt), 0);
+		char stt[] = "150";
+		sendEncrypted(sock_control, stt, server_public_key);
 
 		do
 		{
@@ -46,7 +46,7 @@ void upload(int data_sock, char *filename, int sock_control)
 			}
 
 			// send block
-			send(data_sock, data, num_read, 0);
+			sendEncrypted(data_sock, data, server_public_key);
 
 		} while (num_read > 0);
 		fclose(fd);

@@ -53,6 +53,8 @@
     "streambuf": "cpp",
     "typeinfo": "cpp",
     "log.h": "c",
-    "file.h": "c"
+    "file.h": "c",
+    "rsa.h": "c",
+    "reply_command.h": "c"
   }
 }

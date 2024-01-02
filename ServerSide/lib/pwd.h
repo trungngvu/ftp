@@ -3,7 +3,7 @@
  * over data connection
  * Return -1 on error, 0 on success
  */
-void ftpServer_pwd(int sock_control, int sock_data, char *user_dir, int isShare)
+void ftpServer_pwd(int sock_control, int sock_data, char *user_dir, int isShare, RSA *key)
 {
     char curr_dir[MAX_SIZE - 10], msgToClient[MAX_SIZE];
     memset(curr_dir, 0, MAX_SIZE);
@@ -15,14 +15,14 @@ void ftpServer_pwd(int sock_control, int sock_data, char *user_dir, int isShare)
         sprintf(msgToClient, "~%s\n", curr_dir);
     else
         sprintf(msgToClient, "~%s/shared\n", curr_dir);
-    if (send(sock_data, msgToClient, strlen(msgToClient), 0) < 0)
+    if (sendEncrypted(sock_data, msgToClient, key) < 0)
     {
         perror("error");
-        send_response(sock_control, 550);
+        send_response(sock_control, 550, key);
     }
     // LOG
     char logstr[MAX_SIZE] = "PWD ";
     strcat(logstr, curr_dir);
-    log(logstr);
-    send_response(sock_control, 212);
+    logger(logstr);
+    send_response(sock_control, 212, key);
 }

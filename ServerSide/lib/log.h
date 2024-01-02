@@ -1,4 +1,4 @@
-void log(char *cmd)
+void logger(char *cmd)
 {
     // Log
     char logDir[MAX_SIZE];

@@ -167,7 +167,7 @@ int ftserve_check_user(char *user, char *pass, char *user_dir)
         {
             auth = 1;
             // Lock user to prevent concurrent login
-            toggleUserLock(user, 1);
+            // toggleUserLock(user, 1);
 
             // Change dir to user root dir
             strcat(user_dir, username);
@@ -187,7 +187,7 @@ int ftserve_check_user(char *user, char *pass, char *user_dir)
             // LOG
             char logstr[MAX_SIZE] = "LOGIN ";
             strcat(logstr, user);
-            log(logstr);
+            logger(logstr);
             break;
         }
     }
@@ -240,7 +240,7 @@ int ftserve_check_username(char *user)
 /**
  * Log in connected client
  */
-int ftserve_login(int sock_control, char *user_dir)
+int ftserve_login(int sock_control, char *user_dir, RSA *key)
 {
     char buf[MAX_SIZE];
     char user[MAX_SIZE];
@@ -259,7 +259,7 @@ int ftserve_login(int sock_control, char *user_dir)
     strcpy(user, buf + 5); // 'USER ' has 5 char
 
     // tell client we're ready for password
-    send_response(sock_control, 331);
+    send_response(sock_control, 331, key);
 
     // Wait to receive password
     memset(buf, 0, MAX_SIZE);
@@ -277,7 +277,7 @@ int ftserve_login(int sock_control, char *user_dir)
 /**
  * Log in connected client
  */
-int ftserve_register(int sock_control)
+int ftserve_register(int sock_control, RSA *key)
 {
     char buf[MAX_SIZE];
     char user[MAX_SIZE];
@@ -299,7 +299,7 @@ int ftserve_register(int sock_control)
     while (ftserve_check_username(user))
     {
         // tell client username already exist
-        send_response(sock_control, 431);
+        send_response(sock_control, 431, key);
         // Wait to receive username
         if ((recv_data(sock_control, buf, sizeof(buf))) == -1)
         {
@@ -310,7 +310,7 @@ int ftserve_register(int sock_control)
     }
 
     // tell client we're ready for password
-    send_response(sock_control, 331);
+    send_response(sock_control, 331, key);
 
     // Wait to receive password
     memset(buf, 0, MAX_SIZE);
@@ -346,7 +346,7 @@ int ftserve_register(int sock_control)
     // LOG
     char logstr[MAX_SIZE] = "REG ";
     strcat(logstr, user);
-    log(logstr);
+    logger(logstr);
 
     fclose(fptr);
     return 1;

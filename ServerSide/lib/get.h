@@ -1,12 +1,12 @@
-int recvFile(int sock_control, int sock_data, char *filename, char* cur_user)
+int recvFile(int sock_control, int sock_data, char *filename, char *cur_user)
 {
-	char data[MAX_SIZE];
-	int size, stt = 0;
+	char data[MAX_SIZE], stt[10] = "0";
+	int size;
 	int isReceiveFile = read_reply(sock_control);
 
-	recv(sock_control, &stt, sizeof(stt), 0);
+	receiveDecrypted(sock_control, stt, private_key);
 	// printf("%d\n", stt);
-	if (stt == 550)
+	if (strcmp(stt, "550") == 0)
 	{
 		printf("can't not open file!\n");
 		return -1;
@@ -23,7 +23,7 @@ int recvFile(int sock_control, int sock_data, char *filename, char* cur_user)
 		strcat(filename, ".zip");
 	FILE *fd = fopen(filename, "w");
 
-	while ((size = recv(sock_data, data, MAX_SIZE, 0)) > 0)
+	while ((size = receiveDecrypted(sock_data, data, private_key)) > 0)
 	{
 		fwrite(data, 1, size, fd);
 	}
@@ -43,6 +43,6 @@ int recvFile(int sock_control, int sock_data, char *filename, char* cur_user)
 	strcat(logstr, cur_user);
 	strcat(logstr, " STOR ");
 	strcat(logstr, filename);
-	log(logstr);
+	logger(logstr);
 	return 0;
 }

@@ -64,7 +64,7 @@ SearchResult searchInDirectory(char *dirPath, char *fileName)
  * over data connection
  * Return -1 on error, 0 on success
  */
-void ftserve_find(int sock_control, int sock_data, char *filename, char *cur_user, char *user_dir)
+void ftserve_find(int sock_control, int sock_data, char *filename, char *cur_user, char *user_dir, RSA *key)
 {
     char curr_dir[MAX_SIZE - 2], msg[MAX_SIZE] = "~";
     memset(curr_dir, 0, MAX_SIZE);
@@ -76,28 +76,28 @@ void ftserve_find(int sock_control, int sock_data, char *filename, char *cur_use
     strcat(logstr, cur_user);
     strcat(logstr, " FIND ");
     strcat(logstr, filename);
-    log(logstr);
+    logger(logstr);
 
     // File found
     if (result.count > 0)
     {
-        send_response(sock_control, 241);
-        send_response(sock_control, result.count);
+        send_response(sock_control, 241, key);
+        send_response(sock_control, result.count, key);
         for (int i = 0; i < result.count; ++i)
         {
             strcpy(result.files[i], result.files[i] + strlen(user_dir));
             strcat(msg, result.files[i]);
             strcat(msg, "\n");
-            if (send(sock_data, msg, strlen(msg), 0) < 0)
+            if (sendEncrypted(sock_data, msg, key) < 0)
             {
                 perror("error");
-                send_response(sock_control, 550);
+                send_response(sock_control, 550, key);
             }
             free(result.files[i]); // Free each file path
         }
     }
     // File not found
     else
-        send_response(sock_control, 441);
+        send_response(sock_control, 441, key);
     free(result.files); // Free the array of file paths
 }

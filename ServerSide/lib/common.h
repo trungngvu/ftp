@@ -16,6 +16,9 @@
 #include <ctype.h>
 #include <time.h>
 #include <openssl/sha.h>
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+#include <openssl/err.h>
 
 #define INVALID_SOCKET -1
 #define INVALID_IP -1
@@ -27,7 +30,8 @@ typedef struct sockaddr SOCKADDR;
 
 // Currently logged in user directory
 char root_dir[MAX_SIZE];
-
+RSA *public_key;
+RSA *private_key;
 /**
  * Trim whitespace and line ending
  * characters from a string

@@ -14,8 +14,8 @@ void ftclient_login(int sock_control)
 	ftclient_send_cmd(&cmd, sock_control);
 
 	// Wait for go-ahead
-	int wait;
-	recv(sock_control, &wait, sizeof(wait), 0);
+	char wait[10];
+	receiveDecrypted(sock_control, wait, private_key);
 
 	// Get username from user
 	printf("Name: ");
@@ -28,7 +28,7 @@ void ftclient_login(int sock_control)
 	ftclient_send_cmd(&cmd, sock_control);
 
 	// Wait for go-ahead to send password
-	recv(sock_control, &wait, sizeof(wait), 0);
+	receiveDecrypted(sock_control, wait, private_key);
 
 	// Get password from user
 	fflush(stdout);
@@ -70,8 +70,8 @@ void ftclient_register(int sock_control)
 	ftclient_send_cmd(&cmd, sock_control);
 
 	// Wait for go-ahead
-	int wait;
-	recv(sock_control, &wait, sizeof(wait), 0);
+	char wait[10];
+	receiveDecrypted(sock_control, wait, private_key);
 
 	// Send USER command to server
 	int rep;
