@@ -40,15 +40,14 @@ void ftserve_retr(int sock_control, int sock_data, char *filename, char *cur_use
 
 		do
 		{
-			num_read = fread(data, 1, MAX_SIZE, fd);
-
+			num_read = fread(data, 1, 245, fd);
 			if (num_read < 0)
 			{
 				printf("error in fread()\n");
 			}
 
 			// send block
-			if (sendEncrypted(sock_data, data, key) < 0)
+			if (sendEncryptedBlock(sock_data, data, num_read, key) < 0)
 				perror("error sending file\n");
 
 		} while (num_read > 0);

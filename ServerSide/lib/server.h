@@ -31,8 +31,6 @@ void ftserve_process(int sock_control)
 	send(sock_control, arg, sizeof(arg), 0);
 	recv(sock_control, arg, sizeof(arg), 0);
 	user_public_key = string_to_rsa_key(arg, 0);
-	receiveDecrypted(sock_control, arg, private_key);
-	printf("%s\n", arg);
 
 	// Send welcome message
 	send_response(sock_control, 220, user_public_key);
@@ -61,11 +59,6 @@ void ftserve_process(int sock_control)
 		if (ftserve_login(sock_control, user_dir, user_public_key) == 1)
 		{
 			send_response(sock_control, 230, user_public_key);
-		}
-		else
-		{
-			send_response(sock_control, 430, user_public_key);
-			exit(0);
 		}
 	}
 	int isShare = 0;
@@ -138,10 +131,21 @@ void ftserve_process(int sock_control)
 			{ // RETRIEVE: send file
 				if (isShare)
 				{
-					char file_name[MAX_SIZE];
-					strcpy(file_name, root_dir);
-					strcat(file_name, arg);
-					ftserve_retr(sock_control, sock_data, file_name, cur_user, user_public_key);
+					char share_dir[MAX_SIZE];
+					strcpy(share_dir, user_dir);
+					strcat(share_dir, "/.shared");
+					if (!containsExactString(share_dir, arg))
+					{
+						send_response(sock_control, 1, user_public_key);
+						send_response(sock_control, 550, user_public_key);
+					}
+					else
+					{
+						char file_name[MAX_SIZE];
+						strcpy(file_name, root_dir);
+						strcat(file_name, arg);
+						ftserve_retr(sock_control, sock_data, file_name, cur_user, user_public_key);
+					}
 				}
 				else
 					ftserve_retr(sock_control, sock_data, arg, cur_user, user_public_key);

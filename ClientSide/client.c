@@ -48,7 +48,6 @@ int main(int argc, char const *argv[])
 	server_public_key = string_to_rsa_key(arg, 0);
 	strcpy(arg, rsa_key_to_string(public_key, 0));
 	send(sock_control, arg, sizeof(arg), 0);
-	sendEncrypted(sock_control, "Hello", server_public_key);
 
 	// Get connection, welcome messages
 	printf("Connected to %s.\n", argv[1]);

@@ -1,3 +1,31 @@
+int containsExactString(const char *filename, const char *targetString) {
+    FILE *file = fopen(filename, "r");
+    
+    if (file == NULL) {
+        perror("Error opening file");
+        return -1; // Return an error code if file cannot be opened
+    }
+
+    char buffer[512]; // Adjust the buffer size as needed
+    int contains = 0; // Flag to indicate if the exact string is found
+
+    while (fgets(buffer, sizeof(buffer), file) != NULL) {
+        // Remove newline characters at the end of the line
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\n') {
+            buffer[len - 1] = '\0';
+        }
+
+        if (strcmp(buffer, targetString) == 0) {
+            contains = 1;
+            break;
+        }
+    }
+
+    fclose(file);
+    return contains;
+}
+
 int renameFile(const char *oldName, const char *newName)
 {
     if (oldName == NULL || newName == NULL)

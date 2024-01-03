@@ -38,7 +38,7 @@ void upload(int data_sock, char *filename, int sock_control)
 
 		do
 		{
-			num_read = fread(data, 1, MAX_SIZE, fd);
+			num_read = fread(data, 1, 245, fd);
 
 			if (num_read < 0)
 			{
@@ -46,7 +46,7 @@ void upload(int data_sock, char *filename, int sock_control)
 			}
 
 			// send block
-			sendEncrypted(data_sock, data, server_public_key);
+			sendEncryptedBlock(data_sock, data, num_read, server_public_key);
 
 		} while (num_read > 0);
 		fclose(fd);

@@ -92,6 +92,20 @@ int sendEncrypted(int sock, char *plaintext, RSA *key)
     return 0;
 }
 
+int sendEncryptedBlock(int sock, char *plaintext, int size, RSA *key)
+{
+    // Encryption
+    unsigned char ciphertext[KEY_LENGTH / 8];
+    if (RSA_public_encrypt(size, (const unsigned char *)plaintext, ciphertext, key, RSA_PKCS1_PADDING) == -1)
+    {
+        fprintf(stderr, "Error encrypting data\n");
+        return -1;
+    }
+    send(sock, ciphertext, sizeof(ciphertext), 0);
+    return 0;
+}
+
+
 int receiveDecrypted(int sock, char *decryptedtext, RSA *key)
 {
     unsigned char ciphertext[KEY_LENGTH / 8];
@@ -102,5 +116,5 @@ int receiveDecrypted(int sock, char *decryptedtext, RSA *key)
         return -1;
     }
     decryptedtext[decrypted_length] = '\0';
-    return sizeof(decryptedtext);
+    return decrypted_length;
 }

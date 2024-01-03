@@ -40,9 +40,6 @@ int ftclient_get(int data_sock, int sock_control, char *arg)
 	while ((size = receiveDecrypted(data_sock, data, private_key)) > 0)
 		fwrite(data, 1, size, fd);
 
-	if (size < 0)
-		perror("error\n");
-
 	fclose(fd);
 	int rep = read_reply(sock_control);
 	print_reply(rep);
