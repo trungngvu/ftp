@@ -3,7 +3,7 @@
  * control message over control connection
  * Handles case of null or invalid filename
  */
-void ftserve_retr(int sock_control, int sock_data, char *filename, char *cur_user)
+void ftserve_retr(int sock_control, int sock_data, char *filename, char *cur_user, RSA *key)
 {
 	printf("%s\n", filename);
 	FILE *fd = NULL;
@@ -21,46 +21,45 @@ void ftserve_retr(int sock_control, int sock_data, char *filename, char *cur_use
 		zipFolder(filename, tempZip);
 		strcpy(filename, tempZip);
 		// tell client that we're sending a folder
-		send_response(sock_control, 0);
+		send_response(sock_control, 0, key);
 	}
 	else
-		send_response(sock_control, 1);
+		send_response(sock_control, 1, key);
 
 	fd = fopen(filename, "r");
 
 	if (!fd)
 	{
 		// send error code (550 Requested action not taken)
-		send_response(sock_control, 550);
+		send_response(sock_control, 550, key);
 	}
 	else
 	{
 		// send okay (150 File status okay)
-		send_response(sock_control, 150);
+		send_response(sock_control, 150, key);
 
 		do
 		{
-			num_read = fread(data, 1, MAX_SIZE, fd);
-
+			num_read = fread(data, 1, 245, fd);
 			if (num_read < 0)
 			{
 				printf("error in fread()\n");
 			}
 
 			// send block
-			if (send(sock_data, data, num_read, 0) < 0)
+			if (sendEncryptedBlock(sock_data, data, num_read, key) < 0)
 				perror("error sending file\n");
 
 		} while (num_read > 0);
 
 		// send message: 226: closing conn, file transfer successful
-		send_response(sock_control, 226);
+		send_response(sock_control, 226, key);
 		// LOG
 		char logstr[MAX_SIZE] = "";
 		strcat(logstr, cur_user);
 		strcat(logstr, " RETRIEVE ");
 		strcat(logstr, filename);
-		log(logstr);
+		logger(logstr);
 
 		fclose(fd);
 		if (isDir)

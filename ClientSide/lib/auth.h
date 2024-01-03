@@ -14,37 +14,53 @@ void ftclient_login(int sock_control)
 	ftclient_send_cmd(&cmd, sock_control);
 
 	// Wait for go-ahead
-	int wait;
-	recv(sock_control, &wait, sizeof(wait), 0);
-
-	// Get username from user
-	printf("Name: ");
-	fflush(stdout);
-	read_input(user, MAX_SIZE);
+	char wait[10];
+	receiveDecrypted(sock_control, wait, private_key);
 
 	// Send USER command to server
-	strcpy(cmd.code, "USER");
-	strcpy(cmd.arg, user);
-	ftclient_send_cmd(&cmd, sock_control);
+	int rep;
+	do
+	{
+		// Get username from user
+		printf("Name: ");
+		fflush(stdout);
+		read_input(user, MAX_SIZE);
+		strcpy(cmd.code, "USER");
+		strcpy(cmd.arg, user);
+		ftclient_send_cmd(&cmd, sock_control);
+		rep = read_reply(sock_control);
+		if (rep == 431)
+			printf("431 Username does not exist or user has been locked.\n");
+	} while (rep == 431);
 
-	// Wait for go-ahead to send password
-	recv(sock_control, &wait, sizeof(wait), 0);
+	int try = 1;
+	do
+	{
+		// Get password from user
+		fflush(stdout);
+		char *pass = getpass("Password: ");
+		// Send PASS command to server
+		strcpy(cmd.code, "PASS");
+		strcpy(cmd.arg, pass);
+		ftclient_send_cmd(&cmd, sock_control);
+		rep = read_reply(sock_control);
+		if (rep == 431)
+		{
+			printf("431 Password incorrect. Attempt left: %d\n", 3 - try);
+			try++;
+		}
+	} while (try <= 3 && rep != 230);
 
-	// Get password from user
-	fflush(stdout);
-	char *pass = getpass("Password: ");
+	if (try > 3)
+	{
+		printf("432 Too many attempts, your account has been locked!\n");
+		exit(0);
+	}
 
-	// Send PASS command to server
-	strcpy(cmd.code, "PASS");
-	strcpy(cmd.arg, pass);
-	ftclient_send_cmd(&cmd, sock_control);
-
-	// wait for response
-	int retcode = read_reply(sock_control);
-	switch (retcode)
+	switch (rep)
 	{
 	case 430:
-		printf("430 Invalid username/password or user in use.\n");
+		printf("430 User in use or account has been locked.\n");
 		exit(0);
 	case 230:
 		printf("230 Successful login.\n");
@@ -70,8 +86,8 @@ void ftclient_register(int sock_control)
 	ftclient_send_cmd(&cmd, sock_control);
 
 	// Wait for go-ahead
-	int wait;
-	recv(sock_control, &wait, sizeof(wait), 0);
+	char wait[10];
+	receiveDecrypted(sock_control, wait, private_key);
 
 	// Send USER command to server
 	int rep;

@@ -85,7 +85,7 @@ void cleanUpFile(const char *filename)
         strcat(dir, root_dir);
         strcat(dir, line);
 
-        if (isFile(dir))
+        if (isFile(dir) || isDirectory(dir))
         {
             fprintf(tempFile, "%s\n", line);
         }
@@ -124,7 +124,6 @@ int ftserve_check_user(char *user, char *pass, char *user_dir)
     char password[MAX_SIZE];
     char curDir[MAX_SIZE];
     char shared[MAX_SIZE] = "";
-    int isLock;
     char *pch;
     char buf[MAX_SIZE];
     char *line = NULL;
@@ -152,9 +151,6 @@ int ftserve_check_user(char *user, char *pass, char *user_dir)
         {
             pch = strtok(NULL, " ");
             strcpy(password, pch);
-            pch = strtok(NULL, " ");
-            trimstr(pch, (int)strlen(pch));
-            isLock = atoi(pch);
         }
 
         // remove end of line and whitespace
@@ -163,7 +159,7 @@ int ftserve_check_user(char *user, char *pass, char *user_dir)
         char outputBuffer[65];
         sha256(pass, outputBuffer);
 
-        if ((strcmp(user, username) == 0) && (strcmp(outputBuffer, password) == 0 && (isLock == 0)))
+        if ((strcmp(user, username) == 0) && (strcmp(outputBuffer, password) == 0))
         {
             auth = 1;
             // Lock user to prevent concurrent login
@@ -187,7 +183,7 @@ int ftserve_check_user(char *user, char *pass, char *user_dir)
             // LOG
             char logstr[MAX_SIZE] = "LOGIN ";
             strcat(logstr, user);
-            log(logstr);
+            logger(logstr);
             break;
         }
     }
@@ -202,7 +198,7 @@ int ftserve_check_user(char *user, char *pass, char *user_dir)
  */
 int ftserve_check_username(char *user)
 {
-    char username[MAX_SIZE];
+    char username[MAX_SIZE], password[MAX_SIZE];
     char *pch;
     char buf[MAX_SIZE];
     char *line = NULL;
@@ -210,6 +206,7 @@ int ftserve_check_username(char *user)
     size_t len = 0;
     FILE *fd;
     int check = 0;
+    int isLock;
 
     fd = fopen(".auth", "r");
     if (fd == NULL)
@@ -225,8 +222,12 @@ int ftserve_check_username(char *user)
 
         pch = strtok(buf, " ");
         strcpy(username, pch);
+        pch = strtok(NULL, " ");
+        strcpy(password, pch);
+        pch = strtok(NULL, " ");
+        isLock = atoi(pch);
 
-        if (strcmp(user, username) == 0)
+        if (strcmp(user, username) == 0 && isLock == 0)
         {
             check = 1;
             break;
@@ -240,7 +241,7 @@ int ftserve_check_username(char *user)
 /**
  * Log in connected client
  */
-int ftserve_login(int sock_control, char *user_dir)
+int ftserve_login(int sock_control, char *user_dir, RSA *key)
 {
     char buf[MAX_SIZE];
     char user[MAX_SIZE];
@@ -258,8 +259,20 @@ int ftserve_login(int sock_control, char *user_dir)
 
     strcpy(user, buf + 5); // 'USER ' has 5 char
 
+    while (!ftserve_check_username(user))
+    {
+        // tell client username does not exist
+        send_response(sock_control, 431, key);
+        // Wait to receive username
+        if ((recv_data(sock_control, buf, sizeof(buf))) == -1)
+        {
+            perror("recv error\n");
+            exit(1);
+        }
+        strcpy(user, buf + 5); // 'USER ' has 5 char
+    }
     // tell client we're ready for password
-    send_response(sock_control, 331);
+    send_response(sock_control, 331, key);
 
     // Wait to receive password
     memset(buf, 0, MAX_SIZE);
@@ -271,13 +284,30 @@ int ftserve_login(int sock_control, char *user_dir)
 
     strcpy(pass, buf + 5); // 'PASS ' has 5 char
 
-    return (ftserve_check_user(user, pass, user_dir));
+    int try = 1;
+    while (try <= 3 && !ftserve_check_user(user, pass, user_dir))
+    {
+        // tell client incorrect password
+        send_response(sock_control, 431, key);
+        // Wait to receive username
+        if ((recv_data(sock_control, buf, sizeof(buf))) == -1)
+        {
+            perror("recv error\n");
+            exit(1);
+        }
+        strcpy(pass, buf + 5); // 'PASS ' has 5 char
+        try++;
+    }
+    if (try > 3) // Lock user
+        toggleUserLock(user, 1);
+
+    return (try <= 3);
 }
 
 /**
  * Log in connected client
  */
-int ftserve_register(int sock_control)
+int ftserve_register(int sock_control, RSA *key)
 {
     char buf[MAX_SIZE];
     char user[MAX_SIZE];
@@ -299,7 +329,7 @@ int ftserve_register(int sock_control)
     while (ftserve_check_username(user))
     {
         // tell client username already exist
-        send_response(sock_control, 431);
+        send_response(sock_control, 431, key);
         // Wait to receive username
         if ((recv_data(sock_control, buf, sizeof(buf))) == -1)
         {
@@ -310,7 +340,7 @@ int ftserve_register(int sock_control)
     }
 
     // tell client we're ready for password
-    send_response(sock_control, 331);
+    send_response(sock_control, 331, key);
 
     // Wait to receive password
     memset(buf, 0, MAX_SIZE);
@@ -346,7 +376,7 @@ int ftserve_register(int sock_control)
     // LOG
     char logstr[MAX_SIZE] = "REG ";
     strcat(logstr, user);
-    log(logstr);
+    logger(logstr);
 
     fclose(fptr);
     return 1;

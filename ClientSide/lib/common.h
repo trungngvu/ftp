@@ -17,6 +17,9 @@
 #include <sys/stat.h>
 #include <ctype.h>
 #include <time.h>
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+#include <openssl/err.h>
 
 #define INVALID_SOCKET -1
 #define INVALID_IP -1

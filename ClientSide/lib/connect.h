@@ -68,8 +68,8 @@ int ftclient_open_conn(int sock_con)
 	int sock_listen = socket_create(DEFAULT_PORT);
 
 	// send an ACK on control conn
-	int ack = 1;
-	if ((send(sock_con, &ack, sizeof(ack), 0)) < 0)
+	char ack[10];
+	if ((sendEncrypted(sock_con, ack, server_public_key)) < 0)
 	{
 		printf("client: ack write error :%d\n", errno);
 		exit(1);
@@ -82,8 +82,9 @@ int ftclient_open_conn(int sock_con)
 
 int send_response(int sockfd, int rc)
 {
-	int conv = rc;
-	if (send(sockfd, &conv, sizeof(conv), 0) < 0)
+	char conv[10];
+	sprintf(conv, "%d", rc);
+	if (sendEncrypted(sockfd, conv, server_public_key) < 0)
 	{
 		perror("error sending...\n");
 		return -1;

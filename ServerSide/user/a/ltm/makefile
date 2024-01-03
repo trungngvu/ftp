@@ -1,6 +1,6 @@
 CFLAGS = -c -Wall
 CC = gcc
-LIBS =  -lssl -lcrypto
+LIBS =  
 
 all: cli
 
@@ -8,7 +8,7 @@ install:
 	sudo apt install zip unzip
 
 cli: client.c lib/client.h
-	 ${CC} -o client client.c ${LIBS}
+	 ${CC} -o client client.c
 
 clean:
 	rm -f *.o *~

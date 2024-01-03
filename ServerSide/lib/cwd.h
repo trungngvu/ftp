@@ -66,7 +66,7 @@ char *replaceTilde(char *originalString, const char *replacement)
  * Change directory
  * Return -1 on error, 0 on success
  */
-int ftpServer_cwd(int sock_control, char *folderName, char *user_dir, int *isShared)
+int ftpServer_cwd(int sock_control, char *folderName, char *user_dir, int *isShared, RSA *key)
 {
     char cur_dir[MAX_SIZE];
     char prev_dir[MAX_SIZE];
@@ -77,19 +77,19 @@ int ftpServer_cwd(int sock_control, char *folderName, char *user_dir, int *isSha
 
     if (strcmp(prev_dir, user_dir) == 0 && strcmp(folderName, "shared") == 0)
     {
-        send_response(sock_control, 250); // 250 Directory successfully changed.
+        send_response(sock_control, 250, key); // 250 Directory successfully changed.
         *isShared = 1;
         return 0;
     }
     if (*isShared && strcmp(folderName, "..") == 0)
     {
-        send_response(sock_control, 250); // 250 Directory successfully changed.
+        send_response(sock_control, 250, key); // 250 Directory successfully changed.
         *isShared = 0;
         return 0;
     }
     if (*isShared)
     {
-        send_response(sock_control, 550); // 550 Requested action not taken
+        send_response(sock_control, 550, key); // 550 Requested action not taken
         return -1;
     }
 
@@ -99,22 +99,22 @@ int ftpServer_cwd(int sock_control, char *folderName, char *user_dir, int *isSha
         if (!isSubdirectory(user_dir, cur_dir))
         {
             chdir(prev_dir);
-            send_response(sock_control, 551); // 551 Directory out of user scope
+            send_response(sock_control, 551, key); // 551 Directory out of user scope
         }
         else
         {
-            send_response(sock_control, 250); // 250 Directory successfully changed.
+            send_response(sock_control, 250, key); // 250 Directory successfully changed.
             // LOG
             char logstr[MAX_SIZE] = "";
             strcat(logstr, cur_user);
             strcat(logstr, " CD ");
             strcat(logstr, folderName);
-            log(logstr);
+            logger(logstr);
         }
     }
     else
     {
-        send_response(sock_control, 550); // 550 Requested action not taken
+        send_response(sock_control, 550, key); // 550 Requested action not taken
     }
     return 0;
 }

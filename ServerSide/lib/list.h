@@ -3,7 +3,7 @@
  * over data connection
  * Return -1 on error, 0 on success
  */
-int ftserve_list(int sock_data, int sock_control, int isShare)
+int ftserve_list(int sock_data, int sock_control, int isShare, RSA *key)
 {
     struct dirent **output = NULL;
     char curr_dir[MAX_SIZE], msgToClient[MAX_SIZE];
@@ -25,7 +25,7 @@ int ftserve_list(int sock_data, int sock_control, int isShare)
         {
             strcat(msgToClient, temp);
         }
-        if (send(sock_data, msgToClient, strlen(msgToClient), 0) < 0)
+        if (sendEncrypted(sock_data, msgToClient, key) < 0)
         {
             perror("error");
         }
@@ -48,7 +48,7 @@ int ftserve_list(int sock_data, int sock_control, int isShare)
         }
     }
     strcat(msgToClient, "\n");
-    if (send(sock_data, msgToClient, strlen(msgToClient), 0) < 0)
+    if (sendEncrypted(sock_data, msgToClient, key) < 0)
     {
         perror("error");
     }
