@@ -144,11 +144,11 @@ void ftserve_process(int sock_control)
 						char file_name[MAX_SIZE];
 						strcpy(file_name, root_dir);
 						strcat(file_name, arg);
-						ftserve_retr(sock_control, sock_data, file_name, cur_user, user_public_key);
+						ftserve_retr(sock_control, sock_data, file_name, cur_user, user_public_key, 1);
 					}
 				}
 				else
-					ftserve_retr(sock_control, sock_data, arg, cur_user, user_public_key);
+					ftserve_retr(sock_control, sock_data, arg, cur_user, user_public_key, 0);
 			}
 			else if (strcmp(cmd, "STOR") == 0)
 			{ // STOR: store file

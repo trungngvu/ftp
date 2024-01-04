@@ -34,7 +34,10 @@ int ftclient_get(int data_sock, int sock_control, char *arg)
 	if (!isReceiveFile)
 		strcat(arg, ".zip");
 	if (strstr(arg, "user/") != NULL)
+	{
 		arg = extractUsername(arg);
+		strcpy(folderName, extractUsername(folderName));
+	}
 	FILE *fd = fopen(arg, "w");
 
 	while ((size = receiveDecrypted(data_sock, data, private_key)) > 0)

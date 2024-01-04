@@ -52,5 +52,6 @@ void upload(int data_sock, char *filename, int sock_control)
 		fclose(fd);
 		if (isDir)
 			remove(filename);
+		printf("Upload completed!\n");
 	}
 }

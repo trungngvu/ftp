@@ -1,7 +1,14 @@
-void zipFolder(const char *folderPath, const char *zipPath)
+void zipFolder(char *folderPath, char *zipPath, int isShare)
 {
     char command[1000];
-    sprintf(command, "cd %s && zip -r -y ../%s .", folderPath, zipPath);
+    if (isShare)
+    {
+        char tempZip[500];
+        strcpy(tempZip, extractUsername(zipPath));
+        sprintf(command, "cd %s && zip -r -y %s/../%s .", folderPath, folderPath, tempZip);
+    }
+    else
+        sprintf(command, "cd %s && zip -r -y ../%s .", folderPath, zipPath);
 
     int result = system(command);
 

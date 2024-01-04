@@ -49,9 +49,9 @@ void ftclient_login(int sock_control)
 			printf("431 Password incorrect. Attempt left: %d\n", 3 - try);
 			try++;
 		}
-	} while (try <= 3 && rep != 230);
+	} while (try <= 3 && rep == 431);
 
-	if (try > 3)
+	if (try == 4)
 	{
 		printf("432 Too many attempts, your account has been locked!\n");
 		exit(0);
@@ -64,10 +64,6 @@ void ftclient_login(int sock_control)
 		exit(0);
 	case 230:
 		printf("230 Successful login.\n");
-		break;
-	default:
-		perror("error reading message from server");
-		exit(1);
 		break;
 	}
 }

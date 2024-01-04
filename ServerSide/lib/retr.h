@@ -3,7 +3,7 @@
  * control message over control connection
  * Handles case of null or invalid filename
  */
-void ftserve_retr(int sock_control, int sock_data, char *filename, char *cur_user, RSA *key)
+void ftserve_retr(int sock_control, int sock_data, char *filename, char *cur_user, RSA *key, int isShare)
 {
 	printf("%s\n", filename);
 	FILE *fd = NULL;
@@ -18,7 +18,8 @@ void ftserve_retr(int sock_control, int sock_data, char *filename, char *cur_use
 	{
 		strcpy(tempZip, filename);
 		strcat(tempZip, ".zip");
-		zipFolder(filename, tempZip);
+		printf("%s %s\n", filename, tempZip);
+		zipFolder(filename, tempZip, isShare);
 		strcpy(filename, tempZip);
 		// tell client that we're sending a folder
 		send_response(sock_control, 0, key);

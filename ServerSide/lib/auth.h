@@ -123,7 +123,6 @@ int ftserve_check_user(char *user, char *pass, char *user_dir)
     char username[MAX_SIZE];
     char password[MAX_SIZE];
     char curDir[MAX_SIZE];
-    char shared[MAX_SIZE] = "";
     char *pch;
     char buf[MAX_SIZE];
     char *line = NULL;
@@ -172,13 +171,6 @@ int ftserve_check_user(char *user, char *pass, char *user_dir)
             // Save user root dir to a global variable for future use
             getcwd(curDir, sizeof(curDir));
             strcpy(user_dir, curDir);
-
-            // Clean up user's .shared file
-            strcat(shared, root_dir);
-            strcat(shared, "/user/");
-            strcat(shared, user);
-            strcat(shared, "/.shared");
-            cleanUpFile(shared);
 
             // LOG
             char logstr[MAX_SIZE] = "LOGIN ";
@@ -285,7 +277,7 @@ int ftserve_login(int sock_control, char *user_dir, RSA *key)
     strcpy(pass, buf + 5); // 'PASS ' has 5 char
 
     int try = 1;
-    while (try <= 3 && !ftserve_check_user(user, pass, user_dir))
+    while (try < 3 && !ftserve_check_user(user, pass, user_dir))
     {
         // tell client incorrect password
         send_response(sock_control, 431, key);
@@ -296,12 +288,19 @@ int ftserve_login(int sock_control, char *user_dir, RSA *key)
             exit(1);
         }
         strcpy(pass, buf + 5); // 'PASS ' has 5 char
+        if (ftserve_check_user(user, pass, user_dir))
+            break;
         try++;
     }
-    if (try > 3) // Lock user
+    if (try == 3) // Lock user
+    {
+        // tell client incorrect password
+        send_response(sock_control, 431, key);
         toggleUserLock(user, 1);
+        exit(0);
+    }
 
-    return (try <= 3);
+    return (try < 3);
 }
 
 /**

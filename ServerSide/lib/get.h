@@ -44,5 +44,7 @@ int recvFile(int sock_control, int sock_data, char *filename, char *cur_user)
 	strcat(logstr, " STOR ");
 	strcat(logstr, filename);
 	logger(logstr);
+
+	printf("Receive file completed!\n");
 	return 0;
 }

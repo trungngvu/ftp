@@ -12,6 +12,7 @@ int ftserve_list(int sock_data, int sock_control, int isShare, RSA *key)
 
     if (isShare)
     {
+        cleanUpFile(".shared");
         FILE *share = fopen(".shared", "r");
 
         if (share == NULL)
